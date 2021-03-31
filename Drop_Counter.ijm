@@ -1,23 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
-//// DROP COUNTER //////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// DROP COUNTER //////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// INPUT PARAMETERS (**UPDATE THESE**):
-	//sample protein concentration:
-	protein_uM = 13; 
-	
-	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
-	blank_directory = "//uniwa.uwa.edu.au/userhome/staff7/00101127/My Documents/LLPS results/20201112_gfp-sfpq(1-265)/BLANKS_1hrPlateII_nospin_B1-8_05peg/"+round(protein_uM)+"uM_Gblur30.tif";
-	
-	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
-		//(increase this value if too many premature maxima are found in histogram) 
-	tolerance = 0.1;
-	
-	//droplet threshold value (number of bankground peak standard deviations) ("user value", Wang et al 2018):
-	user_value = 3;
-		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase... shouldn't have to change)
-
-////////////////////////////////////////////////////////////////////////////////////////////
 // This macro is for calculating the relative amount 
 //	of condensed protein in liquid-liquid phase separated 
 //	samples imaged using fluorescence microscopy.
@@ -39,13 +23,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // BEFORE RUNNING MACRO YOU NEED TO MAKE 'BLANK' IMAGES FIRST AND SPECIFY LOCATION ABOVE (LINE 10)
-// *take images of samples at ~ respective [protein] but in conditions prohibitive of LLPS (at least with no big drops)
+// *take images of samples at ~ respective INTEGER [protein] but in conditions prohibitive of LLPS (at least with no big drops).
+// *OR just take images of GFP in similar buffer to LLPS experiments at 1,2,3...29,30 uM...
 	// 1. open image of desired [protein] sample in series (should have no large droplets)
 	// 2. Process -> Filters -> Gaussian Blur... 
 	// 3. Set 'Sigma (Radius)' = 30.0
-	// 4. Save As... TIFF (INCLUDE [protein] in filename)
+	// 4. Save As... TIF (FILENAME MUST BE: '[blank_file_prefix]#.tif' where '#' is protein concentration in uM (an integer) (see below))
 	// 5. repeat for samples to cover [protein] range
-	// 6. Enter file location above (LINE 10)
+	// 6. Enter file location below (LINE 10), or just specify in dialog box (see below).
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,12 +38,56 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 //selectImage(1);
 
+// Default input parameters (these are updated via dialog box pop-up):
+
+	//sample protein concentration:
+	protein_uM = 0; 
+	
+	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
+	blank_directory = "//uniwa.uwa.edu.au/userhome/staff7/00101127/My Documents/LLPS results/20201112_gfp-sfpq(1-265)/BLANKS_1hrPlateII_nospin_B1-8_05peg/";
+
+	//Blank Filename Prefix:
+	blank_file_prefix = "Gblur30_";
+	
+	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
+		//(increase this value if too many premature maxima are found in histogram) 
+	tolerance = 10; //(% of max counts in histogram... see line 141)
+	
+	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
+	user_value = 3;
+		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase... shouldn't have to change)
+
+//Creates dialog box for user input:
+Dialog.create("Sample input");
+Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
+Dialog.addString("(2) Blank Directory:", blank_directory, 100);
+Dialog.addString("(3) Blank Filename Prefix:", blank_file_prefix);
+Dialog.addNumber("(4) Tolerance for raw image background peak find:", tolerance);
+Dialog.addNumber("(5) Droplet threshold parameter:", user_value);
+Dialog.addMessage("*(2) pathway to folder containing blank images");
+Dialog.addMessage("*(3) filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n where '#' is the [protein] in micromolar (an integer)");
+Dialog.addMessage("*(4) (default=10) percentage of max counts value in histogram (increase this value \n if too many premature maxima are found in histogram of raw image");
+Dialog.addMessage("*(5) (default=3) number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018)");
+Dialog.show();
+
+protein_uM = Dialog.getNumber();
+blank_directory = Dialog.getString();
+blank_file_prefix = Dialog.getString();
+tolerance = Dialog.getNumber();
+user_value = Dialog.getNumber();
+
+blank_filepath = blank_directory+blank_file_prefix+round(protein_uM)+".tif";
+
 // starts log:
 print(" ");
 print("###########################################################################");
 print("################################# NEW SAMPLE ##############################");
 print("###########################################################################");
-print("Sample [protein]: "+protein_uM+" uM");
+print("Input parameters:");
+print("Sample protein concentration = "+protein_uM+" uM");
+print("Blank image file path: "+blank_filepath);
+print("Tolerance for raw image background peak find = "+tolerance+"%");
+print("Droplet threshold parameter = "+user_value);
 print(" ");
 
 // Assigns 'sample' to open (selected) image:
@@ -111,7 +140,7 @@ print("min_counts = "+min);
 
 // Need to locate max value of background peak to define region to fit gaussian... 
 // Finds maxima:
-maxima_list = Array.findMaxima(counts, max*tolerance);
+maxima_list = Array.findMaxima(counts, max*tolerance/100);
 maxima_list_sorted = Array.sort(maxima_list);
 dummy_array = newArray(nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, 
 	nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4);
@@ -189,7 +218,7 @@ print("###     LLPS - e.g. in high [salt]) as 'blank' to subtract from sample im
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 // Opens 'blank' image representative of background to subtract: 
-open(blank_directory);
+open(blank_filepath);
 
 blank = getTitle();
 getRawStatistics(nPixels, mean, min, max, std, histogram);
