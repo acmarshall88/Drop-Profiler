@@ -262,6 +262,8 @@ print("normalisation_factor = " + normalisation_factor);
 print("  ^(this is (sample_background_mean)/(blank_mean) x 0.99)");
 
 run("Multiply...", "value="+ normalisation_factor);
+rename(blank+" - (normalised to "+sample+" background)");
+blank_normalised = getTitle();
 
 print("see:  "+getTitle());
 
@@ -271,7 +273,7 @@ print("#########################################################################
 print("### 5. Subtract normalised blank from sample image...  ###");
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-imageCalculator("Subtract create",sample,blank);
+imageCalculator("Subtract create",sample,blank_normalised);
 
 // removes noise:
 run("Median...", "radius=2");
@@ -326,7 +328,7 @@ new_bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 31
 
 // Fits a given function ("customGaussian" in this case) to the 
 // trimmed dataset using "Fit.doFit()".
-// Fit.plot() then prints the fitted plot into a new window...
+// Fit.plot() then prints the fitted plot into a new window (optional)...
 
 	//Using previously fitted max and SD parameters from above (re-fit mean only):
 		initialGuesses = newArray(2);
@@ -356,16 +358,14 @@ new_bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 31
 	refit_max = Fit.p(1); 		//('b' above)
 	refit_sd = Fit.p(2); 		//('c' above)
 
-Fit.plot();
-
-rename(bgsubtracted_sample+" - background peak fit");
+//OPTIONAL:
+//Fit.plot();
 
 print("Y-OFFSET_fit = " + refit_offset);
 print("MAX_fit = " + refit_max);
 print("MEAN_fit = " + refit_mean);
 print("SD_fit = " + refit_sd);
 
-print("see:  "+getTitle());
 print(" ");
 
 // Sets the new threshold for the image ("user value" (arbitrary) is defined in line 17)
