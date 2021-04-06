@@ -41,7 +41,7 @@
 // Default input parameters (these are updated via dialog box pop-up):
 
 	//sample protein concentration:
-	protein_uM = 0; 
+	protein_uM = 10; 
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
 	blank_directory = "//uniwa.uwa.edu.au/userhome/staff7/00101127/My Documents/LLPS results/20201112_gfp-sfpq(1-265)/BLANKS_1hrPlateII_nospin_B1-8_05peg/";
@@ -60,6 +60,7 @@
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
+Dialog.addCheckbox("Subtract Blank?", true);  //@$#$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@
 Dialog.addString("(2) Blank Directory:", blank_directory, 100);
 Dialog.addMessage(
 	"                                                                 "+
@@ -89,6 +90,7 @@ Dialog.addMessage(
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
+blank_subtraction_status = Dialog.getCheckbox(); //@$#$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@
 blank_directory = Dialog.getString();
 blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
@@ -108,7 +110,7 @@ print(" ");
 
 // Assigns 'sample' to open (selected) image:
 sample = getTitle();
-
+bgsubtracted_sample = "not defined (yet)";
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 print("###########################################################################");
@@ -232,6 +234,17 @@ print("sample_background_SD = "+fit_sd);
 print("see:  "+getTitle());
 
 print(" ");
+
+
+
+
+
+if (blank_subtraction_status == true) {
+
+
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 print("###########################################################################");
 print("### 3. Use gaussian blur of image of control sample (same [protein], but no ###");
@@ -383,8 +396,8 @@ print("###     set a reproducible/consistent threshold for all sample images... 
 // Makes trimmed dataset using fitted SD from original gaussian
 // (pre-subtracted image - line 166) to estimate appropriate max cutoff 
 // for fitting Gaussian to BG peak in histogram of BG-subtracted image
-new_bg_x_values = Array.slice(values, 0, fit_sd); //'values' array from line 309
-new_bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 310
+bg_x_values = Array.slice(values, 0, fit_sd); //'values' array from line 309
+bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 310 #$%%$#%$#%$#%$#%$#%$#%$#%$#
 
 // Fits a given function ("customGaussian" in this case) to the 
 // trimmed dataset using "Fit.doFit()".
@@ -397,21 +410,21 @@ new_bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 31
 			//(^no y offset; i.e. y min = 0)
 		customGaussian = "y = a + ("+ fit_max +"-a)*exp(-(x-b)*(x-b)/(2*"+ fit_sd +"*"+ fit_sd +"))"; 
 			//(^WITH OFFSET; i.e. y min = 'a')
-		Fit.doFit(customGaussian, new_bg_x_values, new_bg_y_values, initialGuesses);
+		Fit.doFit(customGaussian, bg_x_values, bg_y_values, initialGuesses);
 		
 	// Extract fitted parameters...
 	fit_offset = Fit.p(0);	//('a' above)
 	refit_mean = Fit.p(1);	//('b' above)
 
 // re-make trimmed dataset...
-	new_bg_x_values = Array.slice(values, 0, refit_mean+fit_sd*1.5);
-	new_bg_y_values = Array.slice(counts, 0, refit_mean+fit_sd*1.5);
+	bg_x_values = Array.slice(values, 0, refit_mean+fit_sd*1.5);
+	bg_y_values = Array.slice(counts, 0, refit_mean+fit_sd*1.5); // #$%%$#%$#%$#%$#%$#%$#%$#%$#
 
 	//Do second round of fitting to tweak max and SD (mean is fixed):
 		initialGuesses = newArray(fit_offset, fit_max, fit_sd);
 		customGaussian3 = "y = a + (b-a)*exp(-(x-("+ refit_mean +"))*(x-("+ refit_mean +"))/(2*c*c))";
 			//(^WITH OFFSET; i.e. y min = 'a')
-		Fit.doFit(customGaussian3, new_bg_x_values, new_bg_y_values, initialGuesses);
+		Fit.doFit(customGaussian3, bg_x_values, bg_y_values, initialGuesses);
 
 	// Extract fitted parameters...
 	refit_offset = Fit.p(0); 	//('a' above)
@@ -433,6 +446,22 @@ print(" ");
 new_thresh = refit_mean + abs(refit_sd)*user_value; 
 print("threshold = " + new_thresh);
 
+
+
+
+
+} else {
+	print("############### (no blank subtraction) ##################");
+	print(" ");
+
+	new_thresh = sample_background_mean + abs(fit_sd)*user_value;
+	print("threshold = " + new_thresh);
+}
+
+
+
+
+
 // Creates data from the fitted gaussian for creation of plot...
 fitted_counts = Array.copy(counts);
 
@@ -449,14 +478,14 @@ for (i = 0; i < values.length; i++) {
  Plot.setColor("cyan");
  Plot.add("line", values, fitted_counts);
  Plot.setColor("red");
-Array.getStatistics(new_bg_y_values, min, max, mean, stdDev);
+Array.getStatistics(bg_y_values, min, max, mean, stdDev); //@$##@$#@$#@$#@$#@
 maxCount = max;
  Plot.drawLine(new_thresh, maxCount*0.8, new_thresh, 0);
  Plot.addText("Threshold Value", 0.13, 0.2);
  Plot.setColor("black");
  Plot.show;
 
-rename(bgsubtracted_sample+" - thresholded histogram");
+rename("Thresholded histogram");
 
 print("see:  "+getTitle());
 
@@ -466,7 +495,13 @@ print("#########################################################################
 print("### 8. Use threshold to define droplet mask...  ###");
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-selectImage(bgsubtracted_sample_ID);
+if (isOpen(bgsubtracted_sample) == 1) {
+	selectImage(bgsubtracted_sample);
+} else {
+	selectImage(sample);
+}
+
+sample_final = getImageID();
 
 getStatistics(area, mean, min, max, std, histogram);
 setThreshold(new_thresh, max);
@@ -574,7 +609,7 @@ well_area_um2 = pow(3300,2);
 print("Well bottom area = "+well_area_um2+" microns^2");
 
 // Calculates area covered by image...
-selectImage(bgsubtracted_sample_ID);
+selectImage(sample_final);
 getDimensions(width, height, channels, slices, frames);
 getPixelSize(unit, pixelWidth, pixelHeight);
 image_width = width*pixelWidth;
@@ -608,17 +643,20 @@ print("#########################################################################
 print("### Remarks ###");
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// Final caution message if normalisation factor deviates too much from 1...
-if ((normalisation_factor > 2) == true || 
-	(normalisation_factor < 0.5) == true) {
-	Dialog.create("Caution (not fatal)");
-	Dialog.addMessage("Blank normalisation factor deviates significantly from 1.0\n"+
-	"(normalisation_factor = "+normalisation_factor+").\n"+
-	"Check blank-subtracted image.\n"+
-	"Consider adding blank images with average intensity more similar to sample background intensity\n"+
-	"and/or check that microscope settings are the same for sample and blank images.");
-	Dialog.show();
-	print("Caution: normalisation factor deviates significantly from 1.0");
+if (blank_subtraction_status == true) {
+
+	// Final caution message if normalisation factor deviates too much from 1...
+	if ((normalisation_factor > 2) == true || 
+		(normalisation_factor < 0.5) == true) {
+		Dialog.create("Caution (not fatal)");
+		Dialog.addMessage("Blank normalisation factor deviates significantly from 1.0\n"+
+		"(normalisation_factor = "+normalisation_factor+").\n"+
+		"Check blank-subtracted image.\n"+
+		"Consider adding blank images with average intensity more similar to sample background intensity\n"+
+		"and/or check that microscope settings are the same for sample and blank images.");
+		Dialog.show();
+		print("Caution: normalisation factor deviates significantly from 1.0");
+	}
 }
 
 print(" "); 
