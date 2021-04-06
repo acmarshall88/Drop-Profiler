@@ -94,8 +94,6 @@ blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
 user_value = Dialog.getNumber();
 
-blank_filepath = blank_directory+blank_file_prefix+round(protein_uM)+".tif";
-
 // starts log:
 print(" ");
 print("###########################################################################");
@@ -103,7 +101,7 @@ print("################################# NEW SAMPLE ############################
 print("###########################################################################");
 print("*User Input Parameters*:");
 print("Sample protein concentration = "+protein_uM+" uM");
-print("Blank image file path:  "+blank_filepath);
+print("Blank image file path:  "+blank_directory+blank_file_prefix+" ##");
 print("Tolerance for raw image background peak find = "+tolerance+"%");
 print("Droplet threshold parameter = "+user_value+"  (background peak standard deviations)");
 print(" ");
@@ -239,6 +237,68 @@ print("#########################################################################
 print("### 3. Use gaussian blur of image of control sample (same [protein], but no ###");
 print("###     LLPS - e.g. in high [salt]) as 'blank' to subtract from sample image... ###");
 ////////////////////////////////////////////////////////////////////////////////////////////
+
+
+blank_uM_1 = round(protein_uM);
+blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
+
+for (i = 1; i < 30; i++) {
+	if (File.exists(blank_filepath_1) == 0) {
+		blank_uM_1 = round(protein_uM-i);
+		blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
+};
+};
+print("path to blank image 1 = "+blank_filepath_1);
+if (File.exists(blank_filepath_1) == 1) {
+	print(" ^This file exists.");
+} else {
+	print(" ^This file DOES NOT exist.");
+}
+
+
+blank_uM_2 = round(protein_uM);
+blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
+
+for (i = 1; i < 100; i++) {
+	if (File.exists(blank_filepath_2) == 0) {
+		blank_uM_2 = round(protein_uM+i);
+		blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
+};
+};
+print("path to blank image 2 = "+blank_filepath_2);
+if (File.exists(blank_filepath_2) == 1) {
+	print(" ^This file exists.");
+} else {
+	print(" ^This file DOES NOT exist.");
+}
+
+
+if (File.exists(blank_filepath_1) == 0) {
+	blank_filepath = blank_filepath_2;
+}
+
+if (File.exists(blank_filepath_2) == 0) {
+	blank_filepath = blank_filepath_1;
+}
+
+if (File.exists(blank_filepath_1) == 1 
+ && File.exists(blank_filepath_2) == 1) {
+	if (((protein_uM - blank_uM_1) <= (blank_uM_2 - protein_uM)) == true) {
+		blank_filepath = blank_filepath_1;		 
+	} else {
+		blank_filepath = blank_filepath_2;
+	}
+}
+
+if (File.exists(blank_filepath_1) == 0
+ && File.exists(blank_filepath_2) == 0) {
+	Dialog.create("Error - check blank images");
+	Dialog.addMessage("Can't find blank file (out of concentration range)");
+	Dialog.show();
+}
+
+print("path to 'best' blank = "+blank_filepath);
+
 
 // Opens 'blank' image representative of background to subtract: 
 open(blank_filepath);
@@ -540,5 +600,25 @@ setResult("Total Cond Vol in sample (nL)", nResults-1, Total_calculated_Vol_in_s
 IJ.renameResults("Method#2 (calculate total condensed volume)");
 
 print("see:  '"+getTitle()+"' results table");
+
+
+print(" "); 
+////////////////////////////////////////////////////////////////////////////////////////////
+print("###########################################################################");
+print("### Remarks ###");
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// Final caution message if normalisation factor deviates too much from 1...
+if ((normalisation_factor > 2) == true || 
+	(normalisation_factor < 0.5) == true) {
+	Dialog.create("Caution (not fatal)");
+	Dialog.addMessage("Blank normalisation factor deviates significantly from 1.0\n"+
+	"(normalisation_factor = "+normalisation_factor+").\n"+
+	"Check blank-subtracted image.\n"+
+	"Consider adding blank images with average intensity more similar to sample background intensity\n"+
+	"and/or check that microscope settings are the same for sample and blank images.");
+	Dialog.show();
+	print("Caution: normalisation factor deviates significantly from 1.0");
+}
 
 print(" "); 
