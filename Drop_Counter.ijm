@@ -255,7 +255,7 @@ print("###     LLPS - e.g. in high [salt]) as 'blank' to subtract from sample im
 blank_uM_1 = round(protein_uM);
 blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
 
-for (i = 1; i < 30; i++) {
+for (i = 1; i < 100; i++) {
 	if (File.exists(blank_filepath_1) == 0) {
 		blank_uM_1 = round(protein_uM-i);
 		blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
@@ -478,7 +478,7 @@ for (i = 0; i < values.length; i++) {
  Plot.setColor("cyan");
  Plot.add("line", values, fitted_counts);
  Plot.setColor("red");
-Array.getStatistics(bg_y_values, min, max, mean, stdDev); //@$##@$#@$#@$#@$#@
+Array.getStatistics(bg_y_values, min, max, mean, stdDev); //@$##@$#@$#@$#@$#@$##@$#@$#@$#@$#@
 maxCount = max;
  Plot.drawLine(new_thresh, maxCount*0.8, new_thresh, 0);
  Plot.addText("Threshold Value", 0.13, 0.2);
@@ -581,26 +581,27 @@ run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 display summa
 
 // Calculates theoretical condensed volume at well bottom
 // using average droplet area ("Average Size") to calculate
-// average droplet volume (ASSUMING A HEMISPHERE), and then
+// average droplet volume (*ASSUMING A HEMISPHERE*), and then
 // multiplying by number of droplets ("Count")...
 
 selectWindow("Summary"); IJ.renameResults("Results"); 
+
+// Adds [protein] to Results Table...
+setResult("protein_uM", nResults-1, protein_uM);
 
 // Gets "Count" and "Average Size" values from last row of Results table...
 Count = getResult("Count", nResults-1);
 Average_Size = getResult("Average Size", nResults-1);
 
-// Rearrange formula for volume-of-a-sphere to calculate 
+// Uses rearranged formula for volume-of-a-sphere to calculate 
 // vol (in cubic microns) from area ("Average Size")... 
 Av_calculated_sphere_Vol = (4/(3*sqrt(PI)))*pow(Average_Size, 3/2);
-// Halve for hemisphere assumption...
+// Halves for hemisphere assumption...
 Av_calculated_hemisphere_Vol = 0.5*Av_calculated_sphere_Vol;
-// Multiply by number of droplets...
+// Multiplies by number of droplets...
 Total_calculated_Vol_um3 = Av_calculated_hemisphere_Vol*Count;
-
-// Convert to nanoliters...
-
-Total_calculated_Vol_nL = Total_calculated_Vol_um3/pow(10,6);
+// Converts to nanoliters...
+Total_calculated_Vol_nL = Total_calculated_Vol_um3/pow(10,6);
 	//(^ 1 nanoliter = 1,000,000 cubic microns)
 
 // Interior dimensions of well bottom are ~ 3.3 x 3.3 mm.
