@@ -306,7 +306,9 @@ if (File.exists(blank_filepath_1) == 1
 if (File.exists(blank_filepath_1) == 0
  && File.exists(blank_filepath_2) == 0) {
 	Dialog.create("Error - check blank images");
-	Dialog.addMessage("Can't find blank file (out of concentration range)");
+	Dialog.addMessage("Can't find blank file. Please check filepath to blank images.");
+	Dialog.addMessage("(This error will also occur if concentration specified in blank filename\n"+
+		"differs from sample concentration by more than 100)");
 	Dialog.show();
 }
 
