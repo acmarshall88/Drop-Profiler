@@ -44,7 +44,7 @@
 	protein_uM = 10; 
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
-	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 40X OBJ\\BLANK(Gblur_of_I1_FITC)";
+	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
 
 	//Blank Filename Prefix:
 	blank_file_prefix = "Gblur100_";
@@ -60,7 +60,7 @@
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
-Dialog.addCheckbox("Subtract Blank?", true);  //@$#$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@
+Dialog.addCheckbox("Subtract Blank?", true);  
 Dialog.addString("(2) Blank Directory:", blank_directory, 100);
 Dialog.addMessage(
 	"                                                                 "+
@@ -90,7 +90,7 @@ Dialog.addMessage(
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
-blank_subtraction_status = Dialog.getCheckbox(); //@$#$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@
+blank_subtraction_status = Dialog.getCheckbox(); 
 blank_directory = Dialog.getString()+"\\";
 blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
@@ -121,7 +121,7 @@ print("### 1. Extract histogram/LUT of raw sample image... ###                  
 getRawStatistics(nPixels, mean, min, max, std, histogram);
 pixel_depth = max-min;
 print("pixel_depth (# of shades of grey in image) = "+ pixel_depth);
-nBins = pixel_depth/pow(2, -floor(-pixel_depth*0.0001)); //(nBins should be ~500-1000 and a factor of pixel_depth)
+nBins = pixel_depth/pow(2, -floor(-pixel_depth*0.0001)); //(nBins should be ~500-5000 and a factor of pixel_depth)
 print("nBins (# of bins for histogram) = "+ nBins);
 
 // Gets values from the LUT histogram. 
@@ -373,7 +373,7 @@ getRawStatistics(nPixels, mean, min, max, std, histogram);
 pixel_depth = max-min;
 print("pixel_depth (# of shades of grey in image) = "+ pixel_depth);
 nBins = pixel_depth/pow(2, -floor(-pixel_depth*0.0001)); 
-	//(^nBins should be ~500-1000 and a factor of pixel depth)
+	//(^nBins should be ~500-5000 and a factor of pixel depth)
 print("nBins (# of bins for histogram) = "+ nBins);
 
 // Gets values from the LUT histogram. 
@@ -398,8 +398,8 @@ print("###     set a reproducible/consistent threshold for all sample images... 
 // Makes trimmed dataset using fitted SD from original gaussian
 // (pre-subtracted image - line 166) to estimate appropriate max cutoff 
 // for fitting Gaussian to BG peak in histogram of BG-subtracted image
-bg_x_values = Array.slice(values, 0, fit_sd*1.5); //'values' array from line 386
-bg_y_values = Array.slice(counts, 0, fit_sd*1.5); //'counts' array from line 387
+bg_x_values = Array.slice(values, 0, fit_sd*1.5); // <- 'values' array from line //386
+bg_y_values = Array.slice(counts, 0, fit_sd*1.5); // <- 'counts' array from line //387
 
 //For setting y-offset: 
 //Gets min counts value in left-most third of blank-subtracted image...
@@ -407,7 +407,7 @@ bg_y_values = Array.slice(counts, 0, fit_sd*1.5); //'counts' array from line 38
 	Array.getStatistics(counts_first_third, min, max, mean, stdDev);
 	min_counts = min;
 	print("max BG counts = "+max);
-	print("min BG counts = "+min);
+	print("min BG counts = "+min+" (used as y-offset for gaussian fit)");
 
 
 // Fits a given function ("customGaussian" in this case) to the 
@@ -502,7 +502,7 @@ for (i = 0; i < values.length; i++) {
  Plot.setColor("cyan");
  Plot.add("line", values, fitted_counts);
  Plot.setColor("red");
-Array.getStatistics(bg_y_values, min, max, mean, stdDev); //@$##@$#@$#@$#@$#@$##@$#@$#@$#@$#@
+Array.getStatistics(bg_y_values, min, max, mean, stdDev); 
 maxCount = max;
  Plot.drawLine(new_thresh, maxCount*0.8, new_thresh, 0);
  Plot.addText("Threshold Value", 0.13, 0.2);
