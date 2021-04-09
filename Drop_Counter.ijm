@@ -44,10 +44,10 @@
 	protein_uM = 10; 
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
-	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateII_nospin\\rowC 10X OBJ\\TIF_Guassianblur(for_BGsubtract)";
+	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 40X OBJ\\BLANK(Gblur_of_I1_FITC)";
 
 	//Blank Filename Prefix:
-	blank_file_prefix = "Gblur30_";
+	blank_file_prefix = "Gblur100_";
 	
 	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
 		//(increase this value if too many premature maxima are found in histogram) 
@@ -382,9 +382,9 @@ print("nBins (# of bins for histogram) = "+ nBins);
 
 getHistogram(values, counts, nBins);
 
-///////EXCLUDE ZEROTH POINT:
-values = Array.slice(values, 1, nBins);
-counts = Array.slice(counts, 1, nBins);
+///////EXCLUDE FIRST THREE POINTS:
+values = Array.slice(values, 3, nBins);
+counts = Array.slice(counts, 3, nBins);
 
 //Plot.create(bgsubtracted_sample+" histogram", "values", "counts", plot_values, plot_counts);
 
@@ -398,45 +398,67 @@ print("###     set a reproducible/consistent threshold for all sample images... 
 // Makes trimmed dataset using fitted SD from original gaussian
 // (pre-subtracted image - line 166) to estimate appropriate max cutoff 
 // for fitting Gaussian to BG peak in histogram of BG-subtracted image
-bg_x_values = Array.slice(values, 0, fit_sd); //'values' array from line 309
-bg_y_values = Array.slice(counts, 0, fit_sd); //'counts' array from line 310 #$%%$#%$#%$#%$#%$#%$#%$#%$#
+bg_x_values = Array.slice(values, 0, fit_sd*1.5); //'values' array from line 386
+bg_y_values = Array.slice(counts, 0, fit_sd*1.5); //'counts' array from line 387
+
+//For setting y-offset: 
+//Gets min counts value in left-most third of blank-subtracted image...
+	counts_first_third = Array.slice(counts, 0, nBins*0.33);
+	Array.getStatistics(counts_first_third, min, max, mean, stdDev);
+	min_counts = min;
+	print("max BG counts = "+max);
+	print("min BG counts = "+min);
+
 
 // Fits a given function ("customGaussian" in this case) to the 
 // trimmed dataset using "Fit.doFit()".
 // Fit.plot() then prints the fitted plot into a new window (optional)...
 
 	//Using previously fitted max and SD parameters from above (re-fit mean only):
-		initialGuesses = newArray(2);
-			//(^sets initial guesses for offset 'a' and mean 'b' as 0 and 0)
+		initialGuesses = newArray(1);
+			//(^sets initial guess for mean 'a' as 0)
+		customGaussian = "y = "+ min_counts +" + ("+ fit_max +"-"+ min_counts +")*exp(-(x-a)*(x-a)/(2*"+ fit_sd +"*"+ fit_sd +"))";
+			//(^set y offset to min counts in histogram)
+
 		//customGaussian = "y = "+ fit_max +"*exp(-(x-a)*(x-a)/(2*"+ fit_sd +"*"+ fit_sd +"))";
 			//(^no y offset; i.e. y min = 0)
-		customGaussian = "y = a + ("+ fit_max +"-a)*exp(-(x-b)*(x-b)/(2*"+ fit_sd +"*"+ fit_sd +"))"; 
-			//(^WITH OFFSET; i.e. y min = 'a')
+
+		//initialGuesses = newArray(2);
+			//(^sets initial guesses for offset 'a' and mean 'b' as 0 and 0)
+		//customGaussian = "y = a + ("+ fit_max +"-a)*exp(-(x-b)*(x-b)/(2*"+ fit_sd +"*"+ fit_sd +"))"; 
+			//(^WITH OFFSET FITTING; i.e. y min = 'a')
+		
 		Fit.doFit(customGaussian, bg_x_values, bg_y_values, initialGuesses);
 		
 	// Extract fitted parameters...
-	fit_offset = Fit.p(0);	//('a' above)
-	refit_mean = Fit.p(1);	//('b' above)
+	refit_mean = Fit.p(0);		//('a' above)
+	//fit_offset = Fit.p(0);	//('a' above)
+	//refit_mean = Fit.p(1);	//('b' above)
 
 // re-make trimmed dataset...
 	bg_x_values = Array.slice(values, 0, refit_mean+fit_sd*1.5);
-	bg_y_values = Array.slice(counts, 0, refit_mean+fit_sd*1.5); // #$%%$#%$#%$#%$#%$#%$#%$#%$#
+	bg_y_values = Array.slice(counts, 0, refit_mean+fit_sd*1.5); 
 
 	//Do second round of fitting to tweak max and SD (mean is fixed):
-		initialGuesses = newArray(fit_offset, fit_max, fit_sd);
-		customGaussian3 = "y = a + (b-a)*exp(-(x-("+ refit_mean +"))*(x-("+ refit_mean +"))/(2*c*c))";
-			//(^WITH OFFSET; i.e. y min = 'a')
+		initialGuesses = newArray(fit_max, fit_sd);
+		customGaussian3 = "y = "+ min_counts +" + (a-"+ min_counts +")*exp(-(x-("+ refit_mean +"))*(x-("+ refit_mean +"))/(2*b*b))";
+			//(^set y offset to min counts in histogram)
+		
+		//initialGuesses = newArray(fit_offset, fit_max, fit_sd);
+		//customGaussian3 = "y = a + (b-a)*exp(-(x-("+ refit_mean +"))*(x-("+ refit_mean +"))/(2*c*c))";
+			//(^WITH OFFSET FITTING; i.e. y min = 'a')
+		
 		Fit.doFit(customGaussian3, bg_x_values, bg_y_values, initialGuesses);
 
 	// Extract fitted parameters...
-	refit_offset = Fit.p(0); 	//('a' above)
-	refit_max = Fit.p(1); 		//('b' above)
-	refit_sd = Fit.p(2); 		//('c' above)
+	//refit_offset = Fit.p(0); 	//('a' above)
+	refit_max = Fit.p(0); 		//('a' above)
+	refit_sd = Fit.p(1); 		//('b' above)
 
 //OPTIONAL:
 //Fit.plot();
 
-print("Y-OFFSET_fit = " + refit_offset);
+//print("Y-OFFSET_fit = " + refit_offset);
 print("MAX_fit = " + refit_max);
 print("MEAN_fit = " + refit_mean);
 print("SD_fit = " + refit_sd);
