@@ -44,7 +44,7 @@
 	protein_uM = 10; 
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
-	blank_directory = "//uniwa.uwa.edu.au/userhome/staff7/00101127/My Documents/LLPS results/20201112_gfp-sfpq(1-265)/BLANKS_1hrPlateII_nospin_B1-8_05peg/";
+	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateII_nospin\\rowC 10X OBJ\\TIF_Guassianblur(for_BGsubtract)";
 
 	//Blank Filename Prefix:
 	blank_file_prefix = "Gblur30_";
@@ -91,7 +91,7 @@ Dialog.show();
 
 protein_uM = Dialog.getNumber();
 blank_subtraction_status = Dialog.getCheckbox(); //@$#$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@$#@
-blank_directory = Dialog.getString();
+blank_directory = Dialog.getString()+"\\";
 blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
 user_value = Dialog.getNumber();
