@@ -60,32 +60,25 @@
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
-Dialog.addCheckbox("Subtract Blank?", true);  
-Dialog.addString("(2) Blank Directory:", blank_directory, 100);
-Dialog.addMessage(
-	"                                                                 "+
-	"^ Pathway to folder containing blank images. \n "
-	, 12);
+Dialog.addMessage("^ Total protein concentration in sample. \n \n");
+
+Dialog.addCheckbox("Subtract Blank?", true);
+Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
+
+Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
+Dialog.addMessage("^ Pathway to folder containing blank image(s). \n \n \n");
+
 Dialog.addString("(3) Blank Filename Prefix:", blank_file_prefix);
-Dialog.addMessage(
-	"                                                                 "+
-	"^ Filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n "+
-	"                                                                 "+
-	"where '#' is the approx protein concentration in micromolar (must be an integer). \n "
-	, 12);
-Dialog.addNumber("(4) Tolerance for raw image background peak find:", tolerance);
-Dialog.addMessage(
-	"                                                                 "+
-	"^ (default=10) Percentage of max counts value in histogram (increase this value \n "+
-	"                                                                 "+
-	"if too many premature maxima are found in histogram of raw image. \n "
-	, 12);
-Dialog.addNumber("(5) Droplet threshold parameter:", user_value);
-Dialog.addMessage(
-	"                                                                 "+
-	"*(5) (default=3) Number of positive standard deviations from mean of background peak of \n "+
-	"                                                                 "+
-	"blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018)");
+Dialog.addMessage("^ Filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n "+
+	"where '#' is the approx protein concentration in micromolar (must be an integer). \n \n \n");
+
+Dialog.addNumber("(4) Peak find tolerance:     ", tolerance);
+Dialog.addMessage("^ Tolerance value for finding background peak in raw image (default=10). \n "+
+	"This is as a percentage of max counts value in histogram (*increase this value \n "+
+	"if too many premature maxima are found in histogram of raw image). \n \n \n");
+
+Dialog.addNumber("(5) Droplet thresholding:  ", user_value);
+Dialog.addMessage("^ (default=3) Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018)");
 
 Dialog.show();
 
