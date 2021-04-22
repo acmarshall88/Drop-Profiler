@@ -22,7 +22,7 @@
 		//	*assumes droplets are approximately hemispherical
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// BEFORE RUNNING MACRO YOU NEED TO MAKE 'BLANK' IMAGES FIRST AND SPECIFY LOCATION ABOVE (LINE 10)
+// BEFORE RUNNING MACRO YOU NEED TO MAKE 'BLANK' IMAGE(S) FIRST AND SPECIFY LOCATION ABOVE (LINE 10)
 // *take images of samples at ~ respective INTEGER [protein] but in conditions prohibitive of LLPS (at least with no big drops).
 // *OR just take images of GFP in similar buffer to LLPS experiments at 1,2,3...29,30 uM...
 	// 1. open image of desired [protein] sample in series (should have no large droplets)
@@ -30,7 +30,7 @@
 	// 3. Set 'Sigma (Radius)' = 30.0
 	// 4. Save As... TIFF (FILENAME MUST BE: '[blank_file_prefix]#.tif' where '#' is protein concentration in uM (an integer) (see below))
 	// 5. repeat for samples to cover [protein] range
-	// 6. Enter file location below (LINE 10), or just specify in dialog box (see below).
+	// 6. Enter file location below (LINE 47), or just specify in dialog box (see below).
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@
 // Default input parameters (these are updated via dialog box pop-up):
 
 	//sample protein concentration:
-	protein_uM = 10; 
+	protein_uM = 1; 
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
 	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
@@ -54,15 +54,15 @@
 	tolerance = 10; //(% of max counts in histogram... see line 141)
 	
 	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
-	user_value = 3;
-		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase... shouldn't have to change)
+	user_value = 10;
+		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase)
 
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
 Dialog.addMessage("^ Total protein concentration in sample. \n \n");
 
-Dialog.addCheckbox("Subtract Blank?", true);
+Dialog.addCheckbox("Subtract Blank?", false);
 Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
 
 Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
@@ -78,7 +78,7 @@ Dialog.addMessage("^ Tolerance value for finding background peak in raw image (d
 	"if too many premature maxima are found in histogram of raw image). \n \n \n");
 
 Dialog.addNumber("(5) Droplet thresholding:  ", user_value);
-Dialog.addMessage("^ (default=3) Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018)");
+Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~5-10 for confocal)");
 
 Dialog.show();
 
@@ -563,6 +563,7 @@ if (isOpen("Method#1 (compare integrated intensities)") == 1) {
 
 row=nResults;
 setResult("prot_conc_uM", row, protein_uM);
+setResult("uservalue_threshSD", row, user_value);
 setResult("condensed_area", row, drop_area);
 setResult("dilute_area", row, back_area);
 setResult("proportion_condensed_area", row, proportion_cond_area);
@@ -605,6 +606,7 @@ selectWindow("Summary"); IJ.renameResults("Results");
 
 // Adds [protein] to Results Table...
 setResult("protein_uM", nResults-1, protein_uM);
+setResult("uservalue_threshSD", row, user_value);
 
 // Gets "Count" and "Average Size" values from last row of Results table...
 Count = getResult("Count", nResults-1);
