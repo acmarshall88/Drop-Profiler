@@ -44,7 +44,7 @@
 	protein_uM = 1; 
 	
 	//filepath to blank image:
-	blank_filepath = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
+	blank_filepath = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20210513_gfp-sfpq(1-265)\\10x\\BLANK_A11.nd2";
 	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
 //	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
@@ -57,7 +57,7 @@
 	tolerance = 10; //(% of max counts in histogram... see line 141)
 	
 	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
-	user_value = 10;
+	user_value = 3;
 		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase)
 
 //Creates dialog box for user input:
@@ -65,10 +65,10 @@ Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
 Dialog.addMessage("^ Total protein concentration in sample. \n \n");
 
-Dialog.addCheckbox("Subtract Blank?", false);
+Dialog.addCheckbox("(2) Subtract Blank?", true);
 Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
 
-Dialog.addString("(2) Blank Filepath:     ", blank_filepath, 100);
+Dialog.addString("(3) Blank Filepath:     ", blank_filepath, 100);
 Dialog.addMessage("^ Complete path to blank image file. \n \n \n");
 
 //Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
@@ -86,6 +86,8 @@ Dialog.addMessage("^ Tolerance value for finding background peak in raw image (d
 Dialog.addNumber("(5) Droplet thresholding:  ", user_value);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~5-10 for confocal)");
 
+Dialog.addCheckbox("(6) Show Gaussian Fits (Plots)?", false);
+
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
@@ -95,6 +97,7 @@ blank_filepath = Dialog.getString();
 //blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
 user_value = Dialog.getNumber();
+show_plots_status = Dialog.getCheckbox();
 
 // starts log:
 print(" ");
@@ -135,11 +138,12 @@ getHistogram(values, counts, nBins);
 plot_values = values;
 plot_counts = counts;
 
-Plot.create(sample+" histogram", "values", "counts", plot_values, plot_counts);
-Plot.show();
-rename(sample+" raw image histogram");
-
-print("see:  "+getTitle());
+if (show_plots_status == true) {
+	Plot.create(sample+" histogram", "values", "counts", plot_values, plot_counts);
+	Plot.show();
+	rename(sample+" raw image histogram");
+	print("see:  "+getTitle());
+};
 
 print(" ");
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -221,9 +225,11 @@ SD_initialguess = peak_x*0.03;
 print("SD_initialguess = "+ SD_initialguess);
 initialGuesses = newArray(maxCount, peak_x, SD_initialguess);
 Fit.doFit("Gaussian (no offset)", bg_x_values, bg_y_values, initialGuesses);
-Fit.plot();
 
-rename(sample+" raw image histogram background peak fit");
+if (show_plots_status == true) {
+	Fit.plot();
+	rename(sample+" raw image histogram background peak fit");
+};
 
 // Extracts fitted parameters from the gaussian fit using "Fit.p()"...
 fit_max = Fit.p(0); //'a' in "Gaussian (no offset)"
@@ -234,7 +240,9 @@ print("Raw Image Background Fit (Gaussian):");
 print("sample_background_max = "+fit_max);
 print("*sample_background_mean* (mean pixel value) = "+sample_background_mean);
 print("sample_background_SD = "+fit_sd);
-print("see:  "+getTitle());
+if (show_plots_status == true) {
+	print("see:  "+getTitle());
+};
 
 print(" ");
 
@@ -491,34 +499,35 @@ print("threshold = " + new_thresh);
 
 
 
-
-
-// Creates data from the fitted gaussian for creation of plot...
-fitted_counts = Array.copy(counts);
-
-for (i = 0; i < values.length; i++) {
-	fitted_counts[i] = Fit.f(values[i]);
-}
-
-// Creation of the plot for visual represenation of the data...
- Plot.create("Total Image Histogram", "Pixel Values", "Counts");
- Plot.setColor("red");
- Plot.setLineWidth(5);
- Plot.add("dot", values, counts);
- Plot.setLineWidth(2);
- Plot.setColor("cyan");
- Plot.add("line", values, fitted_counts);
- Plot.setColor("red");
-Array.getStatistics(bg_y_values, min, max, mean, stdDev); 
-maxCount = max;
- Plot.drawLine(new_thresh, maxCount*0.8, new_thresh, 0);
- Plot.addText("Threshold Value", 0.13, 0.2);
- Plot.setColor("black");
- Plot.show;
-
-rename("Thresholded histogram");
-
-print("see:  "+getTitle());
+if (show_plots_status == true) {
+	
+	// Creates data from the fitted gaussian for creation of plot...
+	fitted_counts = Array.copy(counts);
+	
+	for (i = 0; i < values.length; i++) {
+		fitted_counts[i] = Fit.f(values[i]);
+	}
+	
+	// Creation of the plot for visual represenation of the data...
+	 Plot.create("Total Image Histogram", "Pixel Values", "Counts");
+	 Plot.setColor("red");
+	 Plot.setLineWidth(5);
+	 Plot.add("dot", values, counts);
+	 Plot.setLineWidth(2);
+	 Plot.setColor("cyan");
+	 Plot.add("line", values, fitted_counts);
+	 Plot.setColor("red");
+	Array.getStatistics(bg_y_values, min, max, mean, stdDev); 
+	maxCount = max;
+	 Plot.drawLine(new_thresh, maxCount*0.8, new_thresh, 0);
+	 Plot.addText("Threshold Value", 0.13, 0.2);
+	 Plot.setColor("black");
+	 Plot.show;
+	
+	rename("Thresholded histogram");
+	
+	print("see:  "+getTitle());
+};
 
 print(" ");
 ////////////////////////////////////////////////////////////////////////////////////////////
