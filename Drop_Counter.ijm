@@ -43,11 +43,14 @@
 	//sample protein concentration:
 	protein_uM = 1; 
 	
+	//filepath to blank image:
+	blank_filepath = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
+	
 	//pathway to blank images (NB: these images must have file names: "##uM_Gblur30.tif", where ## is an integer):
-	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
+//	blank_directory = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20201112_gfp-sfpq(1-265)\\Day2_20hr (20201113)\\PlateI_centrifuged\\row I 10X OBJ\\BLANK(I1_Gblur)";
 
 	//Blank Filename Prefix:
-	blank_file_prefix = "Gblur100_";
+//	blank_file_prefix = "Gblur100_";
 	
 	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
 		//(increase this value if too many premature maxima are found in histogram) 
@@ -65,12 +68,15 @@ Dialog.addMessage("^ Total protein concentration in sample. \n \n");
 Dialog.addCheckbox("Subtract Blank?", false);
 Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
 
-Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
-Dialog.addMessage("^ Pathway to folder containing blank image(s). \n \n \n");
+Dialog.addString("(2) Blank Filepath:     ", blank_filepath, 100);
+Dialog.addMessage("^ Complete path to blank image file. \n \n \n");
 
-Dialog.addString("(3) Blank Filename Prefix:", blank_file_prefix);
-Dialog.addMessage("^ Filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n "+
-	"where '#' is the approx protein concentration in micromolar (must be an integer). \n \n \n");
+//Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
+//Dialog.addMessage("^ Pathway to folder containing blank image(s). \n \n \n");
+//
+//Dialog.addString("(3) Blank Filename Prefix:", blank_file_prefix);
+//Dialog.addMessage("^ Filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n "+
+//	"where '#' is the approx protein concentration in micromolar (must be an integer). \n \n \n");
 
 Dialog.addNumber("(4) Peak find tolerance:     ", tolerance);
 Dialog.addMessage("^ Tolerance value for finding background peak in raw image (default=10). \n "+
@@ -83,9 +89,10 @@ Dialog.addMessage("^ Number of positive standard deviations from mean of backgro
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
-blank_subtraction_status = Dialog.getCheckbox(); 
-blank_directory = Dialog.getString()+"\\";
-blank_file_prefix = Dialog.getString();
+blank_subtraction_status = Dialog.getCheckbox();
+blank_filepath = Dialog.getString();
+//blank_directory = Dialog.getString()+"\\";
+//blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
 user_value = Dialog.getNumber();
 
@@ -96,7 +103,10 @@ print("################################# NEW SAMPLE ############################
 print("###########################################################################");
 print("*User Input Parameters*:");
 print("Sample protein concentration = "+protein_uM+" uM");
-print("Blank image file path:  "+blank_directory+blank_file_prefix+" ##");
+if (blank_subtraction_status == true) {
+	print("Blank Image for background-subtraction:  "+blank_filepath);
+}
+//print("Blank image file path:  "+blank_directory+blank_file_prefix+" ##");
 print("Tolerance for raw image background peak find = "+tolerance+"%");
 print("Droplet threshold parameter = "+user_value+"  (background peak standard deviations)");
 print(" ");
@@ -163,7 +173,7 @@ dummy_array = newArray(nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBins-4, nBi
 		//(^adding dummy array is so that for loop (below) will work even if 
 		// no premature maxima are defined)
 		
-print("maxima locations (bins): ") Array.print(maxLoc);
+print("maxima locations (bins): "); Array.print(maxLoc);
 
 //Excludes "premature" maxima (outliers) and define peak location (bin#)...
 
@@ -230,86 +240,90 @@ print(" ");
 
 
 
-
-
 if (blank_subtraction_status == true) {
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 print("###########################################################################");
-print("### 3. Use gaussian blur of image of control sample (same [protein], but no ###");
-print("###     LLPS - e.g. in high [salt]) as 'blank' to subtract from sample image... ###");
+print("### 3. Use gaussian blur of control image (an out-of-focus image of sample with ###");
+print("###     highest [protein] without formation of droplets (i.e. just below Csat)  ###");
+print("###     as 'blank' to subtract from sample image...                             ###");
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-
-blank_uM_1 = round(protein_uM);
-blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
-
-for (i = 1; i < 100; i++) {
-	if (File.exists(blank_filepath_1) == 0) {
-		blank_uM_1 = round(protein_uM-i);
-		blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
-};
-};
-print("path to blank image 1 = "+blank_filepath_1);
-if (File.exists(blank_filepath_1) == 1) {
-	print(" ^This file exists.");
-} else {
-	print(" ^This file DOES NOT exist.");
-}
+//////////////////////////////////////////////////////////////////////////////////////////////
+//print("###########################################################################");
+//print("### 3. Use gaussian blur of image of control sample (same [protein], but no ###");
+//print("###     LLPS - e.g. in high [salt]) as 'blank' to subtract from sample image... ###");
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 
-blank_uM_2 = round(protein_uM);
-blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
-
-for (i = 1; i < 100; i++) {
-	if (File.exists(blank_filepath_2) == 0) {
-		blank_uM_2 = round(protein_uM+i);
-		blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
-};
-};
-print("path to blank image 2 = "+blank_filepath_2);
-if (File.exists(blank_filepath_2) == 1) {
-	print(" ^This file exists.");
-} else {
-	print(" ^This file DOES NOT exist.");
-}
-
-
-if (File.exists(blank_filepath_1) == 0) {
-	blank_filepath = blank_filepath_2;
-}
-
-if (File.exists(blank_filepath_2) == 0) {
-	blank_filepath = blank_filepath_1;
-}
-
-if (File.exists(blank_filepath_1) == 1 
- && File.exists(blank_filepath_2) == 1) {
-	if (((protein_uM - blank_uM_1) <= (blank_uM_2 - protein_uM)) == true) {
-		blank_filepath = blank_filepath_1;		 
-	} else {
-		blank_filepath = blank_filepath_2;
-	}
-}
-
-if (File.exists(blank_filepath_1) == 0
- && File.exists(blank_filepath_2) == 0) {
-	Dialog.create("Error - check blank images");
-	Dialog.addMessage("Can't find blank file. Please check filepath to blank images.");
-	Dialog.addMessage("(This error will also occur if concentration specified in blank filename\n"+
-		"differs from sample concentration by more than 100)");
-	Dialog.show();
-}
-
-print("path to 'best' blank = "+blank_filepath);
+//blank_uM_1 = round(protein_uM);
+//blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
+//
+//for (i = 1; i < 100; i++) {
+//	if (File.exists(blank_filepath_1) == 0) {
+//		blank_uM_1 = round(protein_uM-i);
+//		blank_filepath_1 = blank_directory + blank_file_prefix + blank_uM_1 +".tif";
+//};
+//};
+//print("path to blank image 1 = "+blank_filepath_1);
+//if (File.exists(blank_filepath_1) == 1) {
+//	print(" ^This file exists.");
+//} else {
+//	print(" ^This file DOES NOT exist.");
+//}
+//
+//
+//blank_uM_2 = round(protein_uM);
+//blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
+//
+//for (i = 1; i < 100; i++) {
+//	if (File.exists(blank_filepath_2) == 0) {
+//		blank_uM_2 = round(protein_uM+i);
+//		blank_filepath_2 = blank_directory + blank_file_prefix + blank_uM_2 +".tif";
+//};
+//};
+//print("path to blank image 2 = "+blank_filepath_2);
+//if (File.exists(blank_filepath_2) == 1) {
+//	print(" ^This file exists.");
+//} else {
+//	print(" ^This file DOES NOT exist.");
+//}
+//
+//
+//if (File.exists(blank_filepath_1) == 0) {
+//	blank_filepath = blank_filepath_2;
+//}
+//
+//if (File.exists(blank_filepath_2) == 0) {
+//	blank_filepath = blank_filepath_1;
+//}
+//
+//if (File.exists(blank_filepath_1) == 1 
+// && File.exists(blank_filepath_2) == 1) {
+//	if (((protein_uM - blank_uM_1) <= (blank_uM_2 - protein_uM)) == true) {
+//		blank_filepath = blank_filepath_1;		 
+//	} else {
+//		blank_filepath = blank_filepath_2;
+//	}
+//}
+//
+//if (File.exists(blank_filepath_1) == 0
+// && File.exists(blank_filepath_2) == 0) {
+//	Dialog.create("Error - check blank images");
+//	Dialog.addMessage("Can't find blank file. Please check filepath to blank images.");
+//	Dialog.addMessage("(This error will also occur if concentration specified in blank filename\n"+
+//		"differs from sample concentration by more than 100)");
+//	Dialog.show();
+//}
+//
+//print("path to 'best' blank = "+blank_filepath);
 
 
 // Opens 'blank' image representative of background to subtract: 
 open(blank_filepath);
+
+// Does Gaussian blur to remove all features/noise:
+run("Gaussian Blur...", "sigma=80");
 
 blank = getTitle();
 print("blank image:  "+blank);
@@ -666,14 +680,14 @@ print("### Remarks ###");
 if (blank_subtraction_status == true) {
 
 	// Final caution message if normalisation factor deviates too much from 1...
-	if ((normalisation_factor > 2) == true || 
-		(normalisation_factor < 0.5) == true) {
+	if ((normalisation_factor > 3) == true || 
+		(normalisation_factor < 0.3) == true) {
 		Dialog.create("Caution (not fatal)");
 		Dialog.addMessage("Blank normalisation factor deviates significantly from 1.0\n"+
 		"(normalisation_factor = "+normalisation_factor+").\n"+
 		"Check blank-subtracted image.\n"+
 		"Consider adding blank images with average intensity more similar to sample background intensity\n"+
-		"and/or check that microscope settings are the same for sample and blank images.");
+		"and/or check that microscope settings are similar for sample and blank images.");
 		Dialog.show();
 		print("Caution: normalisation factor deviates significantly from 1.0");
 	}
