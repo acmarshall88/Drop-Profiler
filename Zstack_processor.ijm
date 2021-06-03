@@ -282,8 +282,9 @@ print("plate surface slice (for this droplet) = "+plate_surface_slice_drop);
 
 selectImage(XYZ);
 run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
-
-//setSlice(plate_surface_slice_drop+1);
+run("In [+]");
+run("In [+]");
+run("In [+]");
 
 run("Orthogonal Views");
 
@@ -315,9 +316,9 @@ if (XZrunstatus == true) {
 	selectImage(XZ);
 	saveAs("Tiff", output_dir+"\\XZ.tif");
 	open(output_dir+"\\XZ.tif");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
+	for (i = 0; i < 7; i++) {
+		run("In [+]");
+	};
 	run("Scale to Fit");
 
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
@@ -328,7 +329,7 @@ if (XZrunstatus == true) {
 	run("Create Selection");
 	run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ.csv]");
 
-	saveAs("Tiff", output_dir+"\\"+"XZ_crop.tif");
+	saveAs("Tiff", output_dir+"\\"+"XZ_dropsurface.tif");
 
 	print(" \n**Output file containing XZ coordinates \n  of Droplet Surface can be found here: \n "+
 	""+output_dir+"\\SurfacePx_XZ.csv");
@@ -341,9 +342,9 @@ if (YZrunstatus == true) {
 	selectImage(YZ);
 	saveAs("Tiff", output_dir+"\\YZ.tif");
 	open(output_dir+"\\YZ.tif");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
+	for (i = 0; i < 7; i++) {
+		run("In [+]");
+	};
 	run("Scale to Fit");
 
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
@@ -354,7 +355,7 @@ if (YZrunstatus == true) {
 	run("Create Selection");
 	run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_YZ.csv]");
 
-	saveAs("Tiff", output_dir+"\\"+"YZ_crop.tif");
+	saveAs("Tiff", output_dir+"\\"+"YZ_dropsurface.tif");
 
 	print(" \n**Output file containing YZ coordinates \n  of Droplet Surface can be found here: \n "+
 	""+output_dir+"\\SurfacePx_YZ.csv");
