@@ -9,7 +9,7 @@ function setCustomThreshold() {
 // then sets lower threshold to a user-defined number of standard
 // deviations to the right of the background peak mean.
 
-	print(" \n#### setCustomThreshold() ####\n ");
+	print(" \n#### setCustomThreshold() #### ");
 	
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
 	threshold_upper = max;
@@ -152,12 +152,13 @@ function findPlateSurface() {
 	print("Z coord ("+Voxel_unit+") = "+z_base_micron);
 	
 	//check for slices immediately below this that have larger drop section area: 
-	print("Search for plate surface (largest total droplet area)...");
+	print("\nSearch for plate surface (largest total droplet area)...");
 	selectImage(Zstack);
 	setSlice(z_base_slice);
-	setCustomThreshold();
+	setCustomThreshold(); //*** custom function defined above^^
 	getThreshold(lower, upper);
-	run("Create Selection");
+	
+	run("Create Selection"); //####################################################
 	getStatistics(area, mean, min, max, std, histogram);
 	drop_area = area;
 	
@@ -197,7 +198,7 @@ if (nImages==0) {
 
 //set "user value" for thresholding
 Dialog.create("User input");
-Dialog.addNumber("(5) Droplet thresholding:  ", 12);
+Dialog.addNumber("(5) Droplet thresholding:  ", 15);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10 for confocal images)");
 Dialog.show();
 
@@ -219,14 +220,18 @@ File.makeDirectory(output_dir);
 print("Output Directory = " + output_dir);
 
 
-//Set threshold using slice that corresponds best to plate surface
+//Set master threshold using slice that corresponds best to plate surface
 findPlateSurface();
 plate_surface_slice_average = getSliceNumber();
 
 setCustomThreshold();
+
+//Save master threshold values for reusing when defining droplet surface 
+//(after extracting side-on profiles)  
 getThreshold(lower, upper);
-threshold_lower = lower;
-threshold_upper = upper;
+master_threshold_lower = lower;
+master_threshold_upper = lower*1.8;
+//threshold_upper = upper;
 
 
 
@@ -242,7 +247,7 @@ if (nImages==0) {
 	XYZ = getImageID();
 };
 
-//set slice to estimated plate surface:
+//set slice to average plate surface:
 selectImage(XYZ);
 setSlice(plate_surface_slice_average);
 //run("Plot Z-axis Profile");
@@ -328,11 +333,14 @@ print("plate surface slice (for this droplet) = "+plate_surface_slice_drop);
 selectImage(XYZ);
 run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
 
-setSlice(1);
+//setSlice(plate_surface_slice_drop+1);
 
 run("Orthogonal Views");
-setSlice(1);
+
 Stack.getOrthoViewsIDs(XY, YZ, XZ);
+//setSlice(1);
+selectImage(XYZ);
+Stack.setSlice(1);
 
 // USER INPUT:
 waitForUser("click on centre of droplet");
@@ -346,7 +354,10 @@ Dialog.show();
 XZrunstatus = Dialog.getCheckbox();
 YZrunstatus = Dialog.getCheckbox();
 
-
+print("Threshold for defining droplet surface: \n "+
+	"  Lower = "+master_threshold_lower+" \n "+
+	"  Upper = "+master_threshold_upper);
+	
 //////////////////////////////////////////////
 
 if (XZrunstatus == true) {
@@ -362,8 +373,8 @@ if (XZrunstatus == true) {
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
 //	setAutoThreshold("Yen dark");
 //	getThreshold(lower, upper);
-	setThreshold(threshold_lower, threshold_lower+(max*0.10));
-
+	setThreshold(master_threshold_lower, master_threshold_upper);
+		
 	run("Create Selection");
 	run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ.csv]");
 
@@ -388,7 +399,7 @@ if (YZrunstatus == true) {
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
 //	setAutoThreshold("Yen dark");
 //	getThreshold(lower, upper);
-	setThreshold(threshold_lower, threshold_lower+(max*0.10));
+	setThreshold(master_threshold_lower, master_threshold_upper);
 
 	run("Create Selection");
 	run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_YZ.csv]");
