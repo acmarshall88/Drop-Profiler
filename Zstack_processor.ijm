@@ -187,6 +187,8 @@ function findPlateSurface() {
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
 //open Zstack and get details
 if (nImages==0) {
@@ -272,58 +274,6 @@ run("Scale to Fit");
 //re-find slice that best represents plate surface 
 //(in case plate is not perfectly flat):
 findPlateSurface();
-
-
-////find slice with max average intensity (to estimate base of droplet):
-//selectImage(XYZ);
-//run("Plot Z-axis Profile");
-//Plot.getValues(z_micron, Imean);
-//Array.getStatistics(Imean, min, max, mean, stdDev);
-//maxLoc = Array.findMaxima(Imean, max/2);
-//print("intensity maxima (slices):");
-//	Array.print(maxLoc);
-//
-////find x (slice in micron) where y (Imean) = max
-//z_base_intensity = Imean[maxLoc[0]];
-//z_base_micron = z_micron[maxLoc[0]];
-//z_base_slice = maxLoc[0]+1;
-//
-//print("highest intensity slice = "+z_base_slice);
-//print("mean intensity = "+z_base_intensity);
-//print("Z coord (micron) = "+z_base_micron);
-//
-//
-////check for slices immediately below this that have larger drop section area: 
-//selectImage(XYZ);
-//setSlice(z_base_slice);
-//
-//setAutoThreshold("Li dark");
-//getThreshold(lower, upper);
-//run("Create Selection");
-//getStatistics(area, mean, min, max, std, histogram);
-//drop_area = area;
-//
-//for (i = z_base_slice-1; i >= 1; i--) {
-//    print(z_base_slice);
-//    setSlice(i);
-//    setThreshold(lower, upper);
-//    run("Create Selection");
-//    getStatistics(area, mean, min, max, std, histogram);
-//    drop_area_temp = area;
-//    	if ((drop_area_temp > drop_area) == true) {
-//    		drop_area = drop_area_temp;
-//    		z_base_slice = getSliceNumber();
-//    	} else {
-//    		i = 0;
-//    	};
-//};
-//
-//print("base of droplet (slice) = "+z_base_slice);
-//setSlice(z_base_slice);
-//setThreshold(lower, upper);
-//run("Create Selection");
-
-
 
 //remove all slices below this...
 //plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
