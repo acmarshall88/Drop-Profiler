@@ -9,7 +9,7 @@ function setCustomThreshold() {
 // then sets lower threshold to a user-defined number of standard
 // deviations to the right of the background peak mean.
 
-	print(" \n#### setCustomThreshold() #### ");
+	print(" \n## START setCustomThreshold() ## ");
 	
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
 	threshold_upper = max;
@@ -120,8 +120,8 @@ function setCustomThreshold() {
 	// Plot.setColor("black");
 	// Plot.show;
 
-	print(" \n *Lower Threshold = "+threshold_lower);
-	print(" *Upper Threshold = "+threshold_upper+" \n######## \n ");
+	print(" *Lower Threshold = "+threshold_lower);
+	print(" *Upper Threshold (max) = "+threshold_upper+" \n## END setCustomThreshold() ## \n ");
 };
 ////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +130,7 @@ function findPlateSurface() {
 // Finding slice that best corresponding to plate surface (bottom of droplets):
 // **Requires "setCustomThreshold()" function**
 	
-	print(" \n#### findPlateSurface() ####\n ");
+	print(" \n## START findPlateSurface() ## ");
 	
 	//First find slice with max average intensity (to estimate base of droplet):
 	Zstack = getImageID();
@@ -141,7 +141,7 @@ function findPlateSurface() {
 	Plot.getValues(z_micron, Imean);
 	Array.getStatistics(Imean, min, max, mean, stdDev);
 	maxLoc = Array.findMaxima(Imean, max/2);
-		
+	
 	//find x (slice in micron) where y (Imean) = max
 	z_base_intensity = Imean[maxLoc[0]];
 	z_base_micron = z_micron[maxLoc[0]];
@@ -156,14 +156,16 @@ function findPlateSurface() {
 	selectImage(Zstack);
 	setSlice(z_base_slice);
 	setCustomThreshold(); //*** custom function defined above^^
-	getThreshold(lower, upper);
+	getThreshold(lower, upper); //use these values in for loop below... 
 	
-	run("Create Selection"); //####################################################
+	run("Create Selection"); 
 	getStatistics(area, mean, min, max, std, histogram);
 	drop_area = area;
 	
+	print(" Slice \\ Drop_Area");
+	print(" "+z_base_slice+"   \\ "+drop_area);
+	
 	for (i = z_base_slice-1; i >= 1; i--) {
-	    print(z_base_slice);
 	    setSlice(i);
 	    setThreshold(lower, upper);
 	    run("Create Selection");
@@ -172,7 +174,9 @@ function findPlateSurface() {
 	    	if ((drop_area_temp > drop_area) == true) {
 	    		drop_area = drop_area_temp;
 	    		z_base_slice = getSliceNumber();
+   			    print(" "+z_base_slice+"   \\ "+drop_area);
 	    	} else {
+	    		print(" "+z_base_slice-1+"   \\ "+drop_area_temp);
 	    		i = 0;
 	    	};
 	};
@@ -182,7 +186,7 @@ function findPlateSurface() {
 	print("plate surface (slice) = "+z_base_slice);
 	z_base_micron = Voxel_depth*(z_base_slice-1);
 	print("Z coord ("+Voxel_unit+") = "+z_base_micron);
-	print("########");
+	print("## END findPlateSurface() ##\n ");
 };
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -222,7 +226,9 @@ File.makeDirectory(output_dir);
 print("Output Directory = " + output_dir);
 
 
-//Set master threshold using slice that corresponds best to plate surface
+print("\n##################################################################");
+print("### Set master threshold using slice that corresponds \n### best to average plate surface... ");
+
 findPlateSurface();
 plate_surface_slice_average = getSliceNumber();
 
@@ -233,9 +239,11 @@ setCustomThreshold();
 getThreshold(lower, upper);
 master_threshold_lower = lower;
 master_threshold_upper = lower*1.8;
-//threshold_upper = upper;
 
-
+print("Master threshold values (lower/upper):");
+print(master_threshold_lower);
+print(master_threshold_upper);
+print("##################################################################\n");
 
 /////////////////////////////////////////
 ///////...PUT LOOP START HERE...////////////
