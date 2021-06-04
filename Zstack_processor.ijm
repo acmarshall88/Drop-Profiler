@@ -324,6 +324,7 @@ for (j = 1; j < 1000; j++) {
 	//setSlice(1);
 	selectImage(XYZ);
 	Stack.setSlice(1);
+	resetMinAndMax;
 	
 	// USER INPUT:
 	waitForUser("click on centre of droplet");
