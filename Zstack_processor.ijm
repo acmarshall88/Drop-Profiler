@@ -189,9 +189,87 @@ function findPlateSurface() {
 	print("## END findPlateSurface() ##\n ");
 };
 ////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+function findContactAngle() { 
+	// This will fit a circle to the surface of a  droplet and calculate the 
+	// width of the droplet and droplet contact angle (i.e. the inside
+	// angle at the base of the droplet between the tangent to the droplet surface
+	// and the surface of the plate/slide).
+	// Writes to Results Table.
+	// *REQUIRES A PRE-THRESHOLDED IMAGE, WITH THE 
+	// THRESHOLD DEFINING THE CURVED SURFACE.
+	// *REQUIRES DROPLET TO BE DOWNWARD FACING,	WITH TOP OF IMAGE
+	// DEFINING SURFACE OF THE SLIDE/PLATE.
+	
+	run("Create Selection");
+	
+	getSelectionCoordinates(xpoints, ypoints);
+	
+	makeSelection("point", xpoints, ypoints);
+	
+	run("Fit Circle");
+	
+	//find radius...
+	getSelectionBounds(x, y, w, h);
+	radius = w*0.5;
+	print("Radius: "+radius);
+	
+	//find centre...
+	x_centre = x+radius;
+	y_centre = y+radius;
+	print("centre: ("+x_centre+", "+y_centre+")");
+	
+	//find droplet edges (find x where y=0)...
+	//Circle equation is:
+	//  (x - x_centre)^2 + (y - y_centre)^2 = radius^2
+	//when y=0...
+	//  (x - x_centre)^2 + y_centre^2 = radius^2
+	//rearrange to standard form...
+	//   ax^2 +       bx       +           c            = 0    
+	//  (x^2) + (-2*x_centre*x) + (x_centre^2 + y_centre^2 - radius^2) = 0
+	a=1; 
+	print("a = "+a);
+	b=(-2*x_centre); 
+	print("b = "+b);
+	c=(x_centre*x_centre + y_centre*y_centre - (radius*radius));
+	print("c = "+c);
+	
+	//solve for x using Quadratic formula...
+	//  x = (-b +/- sqrt(b^2 - 4ac))/2a
+	edge_left = (-b - sqrt(b*b - 4*a*c))/2*a;
+	edge_right = (-b + sqrt(b*b - 4*a*c))/2*a;
+	
+	print("edge_left: "+edge_left);
+	print("edge_right: "+edge_right);
+	
+	droplet_width = edge_right-edge_left;
+	print("droplet_width = "+droplet_width);
+	
+	
+	// Use isosceles triangle formed by radii and chord (droplet_width) to calculate
+	// angle (lambda) between chord and radius (trigonometry)...
+	lambda = atan((2 * sqrt(radius*radius - ((droplet_width*droplet_width)/4)) ) / droplet_width);
+	
+	// ... multiply by 180/pi to get degrees...
+	lambda = lambda * 180/PI;
+	
+	// ... the angle(s) between the chord and tangent(s) (i.e the Droplet Contact 
+	// Angle) is equal to 90 minus lambda...
+	ContactAngle = 90 - lambda;
+	
+	print("Contact Angle = "+ContactAngle);
+	
+		row = nResults;
+		setResult("Width_px", row, droplet_width);
+		setResult("Contact_Angle", row, ContactAngle);
+		updateResults();
+};
+////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
+////////////////////////-- START --/////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 //open Zstack and get details
@@ -354,6 +432,13 @@ for (j = 1; j < 1000; j++) {
 	
 		print(" \n**Output file containing XZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
 		""+output_dir+"\\SurfacePx_XZ"+j+".csv");
+
+
+		findContactAngle();
+
+
+
+		
 	};
 	
 	//////////////////////////////////////////////
@@ -378,6 +463,12 @@ for (j = 1; j < 1000; j++) {
 	
 		print(" \n**Output file containing YZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
 		""+output_dir+"\\SurfacePx_YZ"+j+".csv");
+		
+
+		findContactAngle();
+
+
+
 	};
 	
 	waitForUser("Inspect images");
