@@ -344,10 +344,7 @@ for (j = 1; j < 1000; j++) {
 			run("In [+]");
 		};
 		run("Scale to Fit");
-	
-		getRawStatistics(nPixels, mean, min, max, std, histogram);
-	//	setAutoThreshold("Yen dark");
-	//	getThreshold(lower, upper);
+
 		setThreshold(master_threshold_lower, master_threshold_upper);
 			
 		run("Create Selection");
@@ -364,16 +361,14 @@ for (j = 1; j < 1000; j++) {
 	if (YZrunstatus == true) {
 		
 		selectImage(YZ);
+		run("Rotate 90 Degrees Right");
 		saveAs("Tiff", output_dir+"\\YZ"+j+".tif");
 		open(output_dir+"\\YZ"+j+".tif");
 		for (i = 0; i < 6; i++) {
 			run("In [+]");
 		};
 		run("Scale to Fit");
-	
-		getRawStatistics(nPixels, mean, min, max, std, histogram);
-	//	setAutoThreshold("Yen dark");
-	//	getThreshold(lower, upper);
+
 		setThreshold(master_threshold_lower, master_threshold_upper);
 	
 		run("Create Selection");
