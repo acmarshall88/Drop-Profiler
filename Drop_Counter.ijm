@@ -2,14 +2,14 @@
 //////////////////////////////////// DROP COUNTER //////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// This macro is for calculating the relative amount 
+// This macro is for calculating the [relative] amount 
 //	of condensed protein in liquid-liquid phase separated 
 //	samples imaged using fluorescence microscopy.
 
 // MACRO PROCESS OVERVIEW:
 // 1. Extract histogram/LUT (x,y = values,counts) of sample image.
 // 2. Find the mean background pixel value (x) by fitting gaussian to background peak in histogram.
-// 3. Use gaussian blur of image of control sample (same [protein], but no LLPS - e.g. in high [salt]) as 'blank' to subtract from sample image.
+// 3. Use gaussian blur of image of control sample (out-of-focus image of sample with no large droplets) as 'blank' to subtract from sample image.
 // 4. Normalise blank by multipyling it by: 0.99*sample_background_mean/blank_mean. ('mean' is mean pixel value; 99% factor is to leave some background signal to fit gaussian)
 // 5. Subtract normalised blank from sample image.
 // 6. Extract histogram (x,y = values,counts) of background-subtracted image.
@@ -18,19 +18,13 @@
 // 9. Relative condensed protein is calculated using two methods:
 	//	Method#1) total integrated intensity inside droplets divided by total integrated intensity outside droplets (Idroplet/Imedia)
 		//	*assumes no saturated pixels... also assumes background subtraction won't affect(?) 
-	//	Method#2) multiplying average droplet volume (caluculated from average droplet area) by total number of droplets 
-		//	*assumes droplets are approximately hemispherical
+	//	Method#2) identify all droplets and calculate volume of each from their individual areas, then sum all volumes to get total condensed volume. 
+		//	*assumes droplets are spheres with a USER-DEFINED Contact Angle (USER INPUT)
+		//  ... if contact angle is not known, the volume calculated is relative but still valid for Csat determination.
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// BEFORE RUNNING MACRO YOU NEED TO MAKE 'BLANK' IMAGE(S) FIRST AND SPECIFY LOCATION ABOVE (LINE 10)
-// *take images of samples at ~ respective INTEGER [protein] but in conditions prohibitive of LLPS (at least with no big drops).
-// *OR just take images of GFP in similar buffer to LLPS experiments at 1,2,3...29,30 uM...
-	// 1. open image of desired [protein] sample in series (should have no large droplets)
-	// 2. Process -> Filters -> Gaussian Blur... 
-	// 3. Set 'Sigma (Radius)' = 30.0
-	// 4. Save As... TIFF (FILENAME MUST BE: '[blank_file_prefix]#.tif' where '#' is protein concentration in uM (an integer) (see below))
-	// 5. repeat for samples to cover [protein] range
-	// 6. Enter file location below (LINE 47), or just specify in dialog box (see below).
+// BEFORE RUNNING MACRO YOU NEED TO MAKE 'BLANK' IMAGE FIRST AND SPECIFY LOCATION IN DIALOG POPUP (OR LINE 44)
+// *take out-of-focus (~50um below plate surface) image of sample with highest [protein] before LLPS occurs (at least with no big drops).
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +38,7 @@
 	protein_uM = 1; 
 
 	//droplet contact angle (in degrees... automatically converted to radians for volume calculations):	
-	theta = 90;
+	theta = 60;
 
 	//filepath to blank image:
 	blank_filepath = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20210513_gfp-sfpq(1-265)\\10x\\BLANK_A11.nd2";
@@ -56,7 +50,7 @@
 //	blank_file_prefix = "Gblur100_";
 	
 	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
-	user_value = 12;
+	user_value = 3;
 		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase)
 	
 	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
@@ -74,7 +68,7 @@ Dialog.addNumber("(2) Droplet Contact Angle:", theta, 1, 5, "deg");
 Dialog.addNumber("(3) Droplet thresholding:  ", user_value);
 //Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~5-10 for confocal)");
 
-Dialog.addCheckbox("(4) Subtract Blank?", false);
+Dialog.addCheckbox("(4) Subtract Blank?", true);
 //Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
 
 Dialog.addString("(5) Blank Filepath:     ", blank_filepath, 100);
