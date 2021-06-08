@@ -55,29 +55,30 @@
 	//Blank Filename Prefix:
 //	blank_file_prefix = "Gblur100_";
 	
-	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
-		//(increase this value if too many premature maxima are found in histogram) 
-	tolerance = 10; //(% of max counts in histogram... see line 141)
-	
 	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
 	user_value = 12;
 		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase)
-
 	
+	//'tolerance' for finding maxima in background peak of raw sample image (see 'Array.findMaxima()', LINE 102):
+		//(increase this value if too many premature maxima are found in histogram) 
+	tolerance = 10; //(% of max counts in histogram... see line 141)	
 
 
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
-Dialog.addMessage("^ Total protein concentration in sample. \n \n");
+//Dialog.addMessage("^ Total protein concentration in sample. \n \n");
 
-Dialog.addNumber("(1) Droplet Contact Angle:", theta, 90, 5, "deg");
+Dialog.addNumber("(2) Droplet Contact Angle:", theta, 1, 5, "deg");
 
-Dialog.addCheckbox("(2) Subtract Blank?", false);
-Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
+Dialog.addNumber("(3) Droplet thresholding:  ", user_value);
+//Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~5-10 for confocal)");
 
-Dialog.addString("(3) Blank Filepath:     ", blank_filepath, 100);
-Dialog.addMessage("^ Complete path to blank image file. \n \n \n");
+Dialog.addCheckbox("(4) Subtract Blank?", false);
+//Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
+
+Dialog.addString("(5) Blank Filepath:     ", blank_filepath, 100);
+//Dialog.addMessage("^ Complete path to blank image file. \n \n \n");
 
 //Dialog.addString("(2) Blank File Directory:     ", blank_directory, 100);
 //Dialog.addMessage("^ Pathway to folder containing blank image(s). \n \n \n");
@@ -86,26 +87,32 @@ Dialog.addMessage("^ Complete path to blank image file. \n \n \n");
 //Dialog.addMessage("^ Filenames for blank images must have format: '[Blank Filename Prefix]#.tif', \n "+
 //	"where '#' is the approx protein concentration in micromolar (must be an integer). \n \n \n");
 
-Dialog.addNumber("(4) Peak find tolerance:     ", tolerance);
-Dialog.addMessage("^ Tolerance value for finding background peak in raw image (default=10). \n "+
+Dialog.addNumber("(6) Peak find tolerance:     ", tolerance);
+//Dialog.addMessage("^ Tolerance value for finding background peak in raw image (default=10). \n "+
+//	"This is as a percentage of max counts value in histogram (*increase this value \n "+
+//	"if too many premature maxima are found in histogram of raw image). \n \n \n");
+
+Dialog.addCheckbox("(7) Show Gaussian Fits (Plots)?", false);
+
+Dialog.addMessage("\n*Notes:");
+Dialog.addMessage("*(1) Total protein concentration in sample.");
+Dialog.addMessage("*(3) Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~10-15 for confocal)");
+Dialog.addMessage("*(4) Useful when background intensity is non-uniform.");
+Dialog.addMessage("*(5) Complete path to blank image file.");
+Dialog.addMessage("*(6) Tolerance value for finding background peak in raw image (default=10). \n "+
 	"This is as a percentage of max counts value in histogram (*increase this value \n "+
 	"if too many premature maxima are found in histogram of raw image). \n \n \n");
-
-Dialog.addNumber("(5) Droplet thresholding:  ", user_value);
-Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase intensity threshold for defining pixels as condensed phase. \n (use ~3 for widefield images; ~5-10 for confocal)");
-
-Dialog.addCheckbox("(6) Show Gaussian Fits (Plots)?", false);
 
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
 theta = Dialog.getNumber();
+user_value = Dialog.getNumber();
 blank_subtraction_status = Dialog.getCheckbox();
 blank_filepath = Dialog.getString();
 //blank_directory = Dialog.getString()+"\\";
 //blank_file_prefix = Dialog.getString();
 tolerance = Dialog.getNumber();
-user_value = Dialog.getNumber();
 show_plots_status = Dialog.getCheckbox();
 
 // starts log:
@@ -115,12 +122,13 @@ print("################################# NEW SAMPLE ############################
 print("###########################################################################");
 print("*User Input Parameters*:");
 print("Sample protein concentration = "+protein_uM+" uM");
+print("Droplet contact angle = "+theta+" deg");
+print("Droplet threshold parameter = "+user_value+"  (background peak standard deviations)");
 if (blank_subtraction_status == true) {
 	print("Blank Image for background-subtraction:  "+blank_filepath);
 }
 //print("Blank image file path:  "+blank_directory+blank_file_prefix+" ##");
 print("Tolerance for raw image background peak find = "+tolerance+"%");
-print("Droplet threshold parameter = "+user_value+"  (background peak standard deviations)");
 print(" ");
 
 // Assigns 'sample' to open (selected) image:
