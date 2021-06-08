@@ -42,7 +42,10 @@
 
 	//sample protein concentration:
 	protein_uM = 1; 
-	
+
+	//droplet contact angle (in degrees... automatically converted to radians for volume calculations):	
+	theta = 90;
+
 	//filepath to blank image:
 	blank_filepath = "\\\\uniwa.uwa.edu.au\\userhome\\staff7\\00101127\\My Documents\\LLPS results\\20210513_gfp-sfpq(1-265)\\10x\\BLANK_A11.nd2";
 	
@@ -57,15 +60,20 @@
 	tolerance = 10; //(% of max counts in histogram... see line 141)
 	
 	//droplet threshold value (number of background peak standard deviations) ("user value", Wang et al 2018):
-	user_value = 3;
+	user_value = 12;
 		//(Increasing user_value will increase intensity threshold for defining pixels as condensed phase)
+
+	
+
 
 //Creates dialog box for user input:
 Dialog.create("Sample input");
 Dialog.addNumber("(1) Protein Concentration:", protein_uM, 1, 5, "uM");
 Dialog.addMessage("^ Total protein concentration in sample. \n \n");
 
-Dialog.addCheckbox("(2) Subtract Blank?", true);
+Dialog.addNumber("(1) Droplet Contact Angle:", theta, 90, 5, "deg");
+
+Dialog.addCheckbox("(2) Subtract Blank?", false);
 Dialog.addMessage("^ Useful when background intensity is non-uniform. \n \n \n");
 
 Dialog.addString("(3) Blank Filepath:     ", blank_filepath, 100);
@@ -91,6 +99,7 @@ Dialog.addCheckbox("(6) Show Gaussian Fits (Plots)?", false);
 Dialog.show();
 
 protein_uM = Dialog.getNumber();
+theta = Dialog.getNumber();
 blank_subtraction_status = Dialog.getCheckbox();
 blank_filepath = Dialog.getString();
 //blank_directory = Dialog.getString()+"\\";
@@ -585,8 +594,8 @@ if (isOpen("Method#1 (compare integrated intensities)") == 1) {
 };
 
 row=nResults;
-setResult("prot_conc_uM", row, protein_uM);
-setResult("uservalue_threshSD", row, user_value);
+setResult("Prot_Conc_uM", row, protein_uM);
+setResult("SDs_for_threshold", row, user_value);
 setResult("condensed_area", row, drop_area);
 setResult("dilute_area", row, back_area);
 setResult("proportion_condensed_area", row, proportion_cond_area);
@@ -613,38 +622,77 @@ if (isOpen("Method#2 (calculate total condensed volume)") == 1) {
 };
 
 // "run("Analyze Particles...")" counts droplets and calculates average area...
-
 run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 display summarize");
+//run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Outlines display summarize"); //(use this to show droplet outlines)
+// ^^GIVES Area in um^2
 
-//(use the following to display list of particles in results window...)
-	//run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Outlines display summarize");
-	// IJ.renameResults("Particle list for "+protein_uM+"uM sample (Method#2)");
+//Calculate volume of each droplet using Area (A) and Contact Angle (theta)
+//and add to Results table...
 
-// Calculates theoretical condensed volume at well bottom
-// using average droplet area ("Average Size") to calculate
-// average droplet volume (*ASSUMING A HEMISPHERE*), and then
-// multiplying by number of droplets ("Count")...
+//theta must be in RADIANS:
+th_rad = theta*(PI/180);
 
+for (i = 0; i < nResults(); i++) {
+    A = getResult("Area", i);
+    setResult("Volume_um3", i, (PI/3) * pow((sqrt(A/PI)/sin(th_rad)), 3) * (2+cos(th_rad)) * pow((1-cos(th_rad)), 2) );
+}
+updateResults();
+
+selectWindow("Results");
+Vol_array = Table.getColumn("Volume_um3");
+
+Vol_total_um3=0;
+
+for (i=0;i<lengthOf(Vol_array);i++){
+ Vol_total_um3=Vol_total_um3+Vol_array[i];
+};
+
+print("Condensed vol in image (um^3) = "+Vol_total_um3);
+
+//Append to "Summary" table window...
+IJ.renameResults("Particle list for "+protein_uM+"uM sample (Method#2)");
 selectWindow("Summary"); IJ.renameResults("Results"); 
 
-// Adds [protein] to Results Table...
-setResult("protein_uM", nResults-1, protein_uM);
-setResult("uservalue_threshSD", row, user_value);
 
-// Gets "Count" and "Average Size" values from last row of Results table...
-Count = getResult("Count", nResults-1);
-Average_Size = getResult("Average Size", nResults-1);
+/////////////////////////////////////////////////
+//run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 display summarize");
+//
+////(use the following to display list of particles in results window...)
+//	//run("Analyze Particles...", "size=0-Infinity circularity=0.00-1.00 show=Outlines display summarize");
+//	// IJ.renameResults("Particle list for "+protein_uM+"uM sample (Method#2)");
+//
+//// Calculates theoretical condensed volume at well bottom
+//// using average droplet area ("Average Size") to calculate
+//// average droplet volume (*ASSUMING A HEMISPHERE*), and then
+//// multiplying by number of droplets ("Count")...
+//
+//selectWindow("Summary"); IJ.renameResults("Results"); 
+//
+//// Adds [protein] to Results Table...
+//setResult("protein_uM", nResults-1, protein_uM);
+//setResult("uservalue_threshSD", row, user_value);
+//
+//// Gets "Count" and "Average Size" values from last row of Results table...
+//Count = getResult("Count", nResults-1);
+//Average_Size = getResult("Average Size", nResults-1);
+//
+//// Uses rearranged formula for volume-of-a-sphere to calculate 
+//// vol (in cubic microns) from area ("Average Size")... 
+//Av_calculated_sphere_Vol = (4/(3*sqrt(PI)))*pow(Average_Size, 3/2);
+//// Halves for hemisphere assumption...
+//Av_calculated_hemisphere_Vol = 0.5*Av_calculated_sphere_Vol;
+//// Multiplies by number of droplets...
+//Total_calculated_Vol_um3 = Av_calculated_hemisphere_Vol*Count;
+//// Converts to nanoliters...
+//Total_calculated_Vol_nL = Total_calculated_Vol_um3/pow(10,6);
+//	//(^ 1 nanoliter = 1,000,000 cubic microns)
 
-// Uses rearranged formula for volume-of-a-sphere to calculate 
-// vol (in cubic microns) from area ("Average Size")... 
-Av_calculated_sphere_Vol = (4/(3*sqrt(PI)))*pow(Average_Size, 3/2);
-// Halves for hemisphere assumption...
-Av_calculated_hemisphere_Vol = 0.5*Av_calculated_sphere_Vol;
-// Multiplies by number of droplets...
-Total_calculated_Vol_um3 = Av_calculated_hemisphere_Vol*Count;
-// Converts to nanoliters...
-Total_calculated_Vol_nL = Total_calculated_Vol_um3/pow(10,6);
+/////////////////////////////////////////////////
+
+
+Total_calculated_Vol_nL=Vol_total_um3/pow(10,6);
 	//(^ 1 nanoliter = 1,000,000 cubic microns)
+print("Condensed vol in image (nL) = "+Total_calculated_Vol_nL);
 
 // Interior dimensions of well bottom are ~ 3.3 x 3.3 mm.
 print("Well bottom dimensions ~ 3.3 x 3.3 mm");
@@ -668,16 +716,22 @@ print("extrapolation_factor = "+extrapolation_factor+
 	" <--(condensed vol captured by image is multiplied by this to get total condensed volume in sample)");
 
 Total_calculated_Vol_in_sample_nL = Total_calculated_Vol_nL*extrapolation_factor;
+print("Condensed vol in sample (nL) = "+Total_calculated_Vol_in_sample_nL);
 
 // Appends output to Results Table...
-setResult("Condensed Volume (um^3)", nResults-1, Total_calculated_Vol_um3);
-setResult("Cond Vol in image (nL)", nResults-1, Total_calculated_Vol_nL);
-setResult("Total Cond Vol in sample (nL)", nResults-1, Total_calculated_Vol_in_sample_nL);
+//setResult("Condensed Volume (um^3)", nResults-1, Total_calculated_Vol_um3);
+setResult("Protein_Conc_uM", nResults-1, protein_uM);
+setResult("SDs_for_threshold", nResults-1, user_value);
+setResult("Contact_angle", nResults-1, theta);
+setResult("Condensed_Vol_um3", nResults-1, Vol_total_um3);
+setResult("Cond_Vol_in_image_nL", nResults-1, Total_calculated_Vol_nL);
+setResult("Cond_Vol_in_sample_nL", nResults-1, Total_calculated_Vol_in_sample_nL);
 
 // Renames Results table...
 IJ.renameResults("Method#2 (calculate total condensed volume)");
 
-print("see:  '"+getTitle()+"' results table");
+print("see:  '"+getInfo("window.title")+"' results table");
+//print("see:  '"+getTitle()+"' results table");
 
 
 print(" "); 
