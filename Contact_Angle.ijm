@@ -283,10 +283,13 @@ if (nImages==0) {
 //set "user value" for thresholding
 Dialog.create("User input");
 Dialog.addNumber("(5) Droplet thresholding:  ", 15);
-Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10 for confocal images)");
+Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10-15 for confocal images)");
+Dialog.addCheckbox("Select droplets manually?", true);
+
 Dialog.show();
 
 user_value = Dialog.getNumber();
+Manual_drop_select_status = Dialog.getCheckbox();
 
 //sample details...
 selectImage(1);
@@ -334,157 +337,150 @@ XZrunstatus = Dialog.getCheckbox();
 YZrunstatus = Dialog.getCheckbox();
 
 
-/////////////////////////////////////////
-///////...PUT LOOP START HERE...////////////
-/////////////////////////////////////////
-
-
-for (j = 1; j < 1000; j++) {
+if (Manual_drop_select_status == true) {
 	
-	print("\n##################################################################");
-	print("### DROPLET #"+j+"... ");
-	
-	//re-open Zstack upon iteration
-	if (nImages==0) {
-		open(dir+Zstackfilename);
+	for (j = 1; j < 1000; j++) {
+		
+		print("\n##################################################################");
+		print("### DROPLET #"+j+"... ");
+		
+		//re-open Zstack upon iteration
+		if (nImages==0) {
+			open(dir+Zstackfilename);
+			run("In [+]");
+			run("Scale to Fit");
+			XYZ = getImageID();
+			setSlice(plate_surface_slice_average);
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		};
+		
+		//set slice to average plate surface:
+		selectImage(XYZ);
+		setSlice(plate_surface_slice_average);
+		//run("Plot Z-axis Profile");
+		//Plot.getValues(z_micron, Imean);
+		//run("Close");
+		//Array.getStatistics(Imean, min, max, mean, stdDev);
+		//maxLoc = Array.findMaxima(Imean, max/2);
+		//max_intensity_slice = maxLoc[0]+1;
+		//setSlice(max_intensity_slice);
+		
+		////////////////
+		// USER INPUT:
+		waitForUser("draw selection box around a single droplet");
+		
+		getSelectionBounds(x, y, width, height);
+		print("Droplet#"+j+" location and size (user-defined selection box):");
+		print(" location (top left coords) = ("+x+", "+y+") pxls");
+		print(" size (W x H) = "+width+" x "+height+" pxls"); 
+		
+		run("Crop");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
 		run("In [+]");
 		run("Scale to Fit");
-		XYZ = getImageID();
-		setSlice(plate_surface_slice_average);
-		setThreshold(master_threshold_lower, master_threshold_upper);
-	};
-	
-	//set slice to average plate surface:
-	selectImage(XYZ);
-	setSlice(plate_surface_slice_average);
-	//run("Plot Z-axis Profile");
-	//Plot.getValues(z_micron, Imean);
-	//run("Close");
-	//Array.getStatistics(Imean, min, max, mean, stdDev);
-	//maxLoc = Array.findMaxima(Imean, max/2);
-	//max_intensity_slice = maxLoc[0]+1;
-	//setSlice(max_intensity_slice);
-	
-	////////////////
-	// USER INPUT:
-	waitForUser("draw selection box around a single droplet");
-	
-	getSelectionBounds(x, y, width, height);
-	print("Droplet#"+j+" location and size (user-defined selection box):");
-	print(" location (top left coords) = ("+x+", "+y+") pxls");
-	print(" size (W x H) = "+width+" x "+height+" pxls"); 
-	
-	run("Crop");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("Scale to Fit");
-	
-	//re-find slice that best represents plate surface 
-	//(in case plate is not perfectly flat):
-	findPlateSurface();
-	
-	//remove all slices below this...
-	//plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
-	plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
-	print("plate surface slice (for Droplet#"+j+") = "+plate_surface_slice_drop);
-	
-	selectImage(XYZ);
-	run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	
-	run("Orthogonal Views");
-	
-	Stack.getOrthoViewsIDs(XY, YZ, XZ);
-	//setSlice(1);
-	selectImage(XYZ);
-	Stack.setSlice(1);
-	resetMinAndMax;
-	
-	// USER INPUT:
-	waitForUser("click on centre of droplet");
-	
-	print("Threshold for defining droplet surface: \n "+
-		"  Lower = "+master_threshold_lower+" \n "+
-		"  Upper = "+master_threshold_upper);
 		
-	//////////////////////////////////////////////
+		//re-find slice that best represents plate surface 
+		//(in case plate is not perfectly flat):
+		findPlateSurface();
+		
+		//remove all slices below this...
+		//plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
+		plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
+		print("plate surface slice (for Droplet#"+j+") = "+plate_surface_slice_drop);
+		
+		selectImage(XYZ);
+		run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+		
+		run("Orthogonal Views");
+		
+		Stack.getOrthoViewsIDs(XY, YZ, XZ);
+		//setSlice(1);
+		selectImage(XYZ);
+		Stack.setSlice(1);
+		resetMinAndMax;
+		
+		// USER INPUT:
+		waitForUser("click on centre of droplet");
+		
+		print("Threshold for defining droplet surface: \n "+
+			"  Lower = "+master_threshold_lower+" \n "+
+			"  Upper = "+master_threshold_upper);
+			
+		//////////////////////////////////////////////
+		
+		if (XZrunstatus == true) {
+		
+			selectImage(XZ);
+			saveAs("Tiff", output_dir+"\\XZ"+j+".tif");
+			open(output_dir+"\\XZ"+j+".tif");
+			for (i = 0; i < 6; i++) {
+				run("In [+]");
+			};
+			run("Scale to Fit");
 	
-	if (XZrunstatus == true) {
+			setThreshold(master_threshold_lower, master_threshold_upper);
+				
+			run("Create Selection");
+			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ"+j+".csv]");
+		
+			saveAs("Tiff", output_dir+"\\"+"XZ"+j+"_dropsurface.tif");
+		
+			print(" \n**Output file containing XZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
+			""+output_dir+"\\SurfacePx_XZ"+j+".csv");
 	
-		selectImage(XZ);
-		saveAs("Tiff", output_dir+"\\XZ"+j+".tif");
-		open(output_dir+"\\XZ"+j+".tif");
-		for (i = 0; i < 6; i++) {
-			run("In [+]");
+			findContactAngle();
+			
 		};
-		run("Scale to Fit");
-
-		setThreshold(master_threshold_lower, master_threshold_upper);
-			
-		run("Create Selection");
-		run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ"+j+".csv]");
-	
-		saveAs("Tiff", output_dir+"\\"+"XZ"+j+"_dropsurface.tif");
-	
-		print(" \n**Output file containing XZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
-		""+output_dir+"\\SurfacePx_XZ"+j+".csv");
-
-
-		findContactAngle();
-
-
-
 		
-	};
-	
-	//////////////////////////////////////////////
-	
-	if (YZrunstatus == true) {
+		//////////////////////////////////////////////
 		
-		selectImage(YZ);
-		run("Rotate 90 Degrees Right");
-		saveAs("Tiff", output_dir+"\\YZ"+j+".tif");
-		open(output_dir+"\\YZ"+j+".tif");
-		for (i = 0; i < 6; i++) {
-			run("In [+]");
+		if (YZrunstatus == true) {
+			
+			selectImage(YZ);
+			run("Rotate 90 Degrees Right");
+			saveAs("Tiff", output_dir+"\\YZ"+j+".tif");
+			open(output_dir+"\\YZ"+j+".tif");
+			for (i = 0; i < 6; i++) {
+				run("In [+]");
+			};
+			run("Scale to Fit");
+	
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		
+			run("Create Selection");
+			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_YZ"+j+".csv]");
+		
+			saveAs("Tiff", output_dir+"\\"+"YZ"+j+"_dropsurface.tif");
+		
+			print(" \n**Output file containing YZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
+			""+output_dir+"\\SurfacePx_YZ"+j+".csv");
+			
+			findContactAngle();
+	
 		};
-		run("Scale to Fit");
-
-		setThreshold(master_threshold_lower, master_threshold_upper);
-	
-		run("Create Selection");
-		run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_YZ"+j+".csv]");
-	
-		saveAs("Tiff", output_dir+"\\"+"YZ"+j+"_dropsurface.tif");
-	
-		print(" \n**Output file containing YZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
-		""+output_dir+"\\SurfacePx_YZ"+j+".csv");
 		
-
-		findContactAngle();
-
-
-
-	};
-	
-	waitForUser("Inspect images");
-	
-	Dialog.create("Keep analysing?");
-	Dialog.addRadioButtonGroup("Would you like to analyse another droplet from this Z-stack?", newArray("Yes","No"), 2, 1, "Yes");
-	Dialog.show();
-	
-	continue_status = Dialog.getRadioButton();
-	
-	if (continue_status == "Yes") {
-		close("*");
-	} else {
-		selectWindow("Log");
-		saveAs("text", output_dir+"\\log.txt");
-		close("Log");
-			exit
+		//////////////////////////////////////////////
+		
+		waitForUser("Inspect images");
+		
+		Dialog.create("Keep analysing?");
+		Dialog.addRadioButtonGroup("Would you like to analyse another droplet from this Z-stack?", newArray("Yes","No"), 2, 1, "Yes");
+		Dialog.show();
+		
+		continue_status = Dialog.getRadioButton();
+		
+		if (continue_status == "Yes") {
+			close("*");
+		} else {
+			selectWindow("Log");
+			saveAs("text", output_dir+"\\log.txt");
+			close("Log");
+				exit
+		};
 	};
 };
