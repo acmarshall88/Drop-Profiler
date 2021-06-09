@@ -236,8 +236,8 @@ function findContactAngle() {
 	c=(x_centre*x_centre + y_centre*y_centre - (radius*radius));
 	print("c = "+c);
 	
-	//solve for x using Quadratic formula...
-	//  x = (-b +/- sqrt(b^2 - 4ac))/2a
+	print("solve for x using Quadratic formula...");
+	print("  x = (-b +/- sqrt(b^2 - 4ac))/2a");
 	edge_left = (-b - sqrt(b*b - 4*a*c))/2*a;
 	edge_right = (-b + sqrt(b*b - 4*a*c))/2*a;
 	
