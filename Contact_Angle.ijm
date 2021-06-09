@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-//FUNCTIONS:
+//FUNCTIONS USED IN SCRIPT WHICH STARTS @ LINE ~275:
 
 ////////////////////////////////////////////////////////////////////////
 function setCustomThreshold() { 
@@ -273,6 +273,8 @@ function findContactAngle() {
 ////////////////////////-- START --/////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+//Z-STACK MUST BE BOTTOM->TOP (i.e. slice 1 is below plate surface)
+
 //open Zstack and get details
 if (nImages==0) {
 	waitForUser("Please open Z-stack of droplet images, then hit OK.");
@@ -285,7 +287,7 @@ if (nImages==0) {
 Dialog.create("User input");
 Dialog.addNumber("(5) Droplet thresholding:  ", 15);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10-15 for confocal images)");
-Dialog.addCheckbox("Select droplets manually?", true);
+Dialog.addCheckbox("Select droplets manually?", false);
 
 Dialog.show();
 
@@ -329,7 +331,7 @@ print(master_threshold_upper);
 
 
 Dialog.create("Select Orthogonal Views");
-Dialog.addMessage("Which orthogonal views would you like to include in analysis?");
+Dialog.addMessage("Which side-on views would you like to include in analysis?");
 Dialog.addCheckbox("XZ", true);
 Dialog.addCheckbox("YZ", true);
 Dialog.show();
@@ -488,4 +490,82 @@ if (Manual_drop_select_status == true) {
 				exit
 		};
 	};
-};
+} else {
+		
+	getVoxelSize(Vx_width, Vx_height, Vx_depth, Vx_unit);
+		Vx_width=Vx_width;
+		Vx_height=Vx_height;
+		Vx_depth=Vx_depth;
+		Vx_unit=Vx_unit;
+		
+	roiManager("reset");
+	
+	run("Analyze Particles...", "size=17-Infinity circularity=0.99-1.00 add slice");
+	
+	n = roiManager('count');
+	print("no. of drops to be analysed = "+n);
+	
+	for (k = 0; k < n; k++) {
+	    selectImage(XYZ);
+	    roiManager('select', k);
+	    Roi.getBounds(x, y, width, height);
+	    makeRectangle(x-2, y-2, width+4, height+4);
+	    run("Duplicate...", "duplicate");
+		XYZ_crop = getImageID();
+	
+			//re-find slice that best represents plate surface 
+			//(in case plate is not perfectly flat):
+			findPlateSurface();
+			
+			//remove all slices below this...
+			plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
+	//		plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
+			print("plate surface slice (for Droplet#"+(k+1)+") = "+plate_surface_slice_drop);
+			
+			selectImage(XYZ_crop);
+			run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
+			
+			run("In [+]");
+			run("In [+]");
+			
+			run("In [+]");
+		
+	    run("Reslice [/]...", "output="+Vx_width+" start=Top avoid");
+	
+			//Find slice with max average intensity (to estimate middle of droplet):
+			XYZ_crop_reslice = getImageID();
+			run("Plot Z-axis Profile");
+			Plot.getValues(z_micron, Imean);
+			Array.getStatistics(Imean, min, max, mean, stdDev);
+			maxLoc = Array.findMaxima(Imean, max/2);
+			
+			//find x (slice in micron) where y (Imean) = max
+			mid_slice_intensity = Imean[maxLoc[0]];
+			mid_slice_micron = z_micron[maxLoc[0]];
+			mid_slice_number = maxLoc[0]+1;
+			
+			print("number of slices = "+nSlices);		
+			print("highest intensity slice = "+mid_slice_number);
+			selectImage(XYZ_crop_reslice);
+			setSlice(mid_slice_number);
+	
+			// SET THRESHOLD TO DEFINE DROP SURFACE
+			setThreshold(master_threshold_lower, master_threshold_upper);
+			
+			run("Create Selection");
+			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv]");
+			
+			open(output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv");
+			IJ.renameResults("SurfacePx_XZ_raw_"+(k+1)+".csv","Results");
+			for (i = 0; i < nResults(); i++) {
+			    v = getResult("Y", i);
+			    setResult("Y_corrected", i, v*Vx_depth);
+			}
+			updateResults();
+			saveAs("Results", output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv");
+
+			
+	
+	}
+	
+}
