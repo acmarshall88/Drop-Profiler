@@ -220,14 +220,15 @@ function findContactAngle() {
 	y_centre = y+radius;
 	print("centre: ("+x_centre+", "+y_centre+")");
 	
-	//find droplet edges (find x where y=0)...
-	//Circle equation is:
-	//  (x - x_centre)^2 + (y - y_centre)^2 = radius^2
-	//when y=0...
-	//  (x - x_centre)^2 + y_centre^2 = radius^2
-	//rearrange to standard form...
-	//   ax^2 +       bx       +           c            = 0    
-	//  (x^2) + (-2*x_centre*x) + (x_centre^2 + y_centre^2 - radius^2) = 0
+	print("find droplet edges (find x where y=0)...");
+	print("Circle equation is:");
+	print("  (x - x_centre)^2 + (y - y_centre)^2 = radius^2");
+	print("when y=0...");
+	print("  (x - x_centre)^2 + y_centre^2 = radius^2");
+	print("rearrange to standard form...");
+	print("   ax^2 +       bx       +           c            = 0");
+	print("  (x^2) + (-2*x_centre*x) + (x_centre^2 + y_centre^2 - radius^2) = 0");
+	
 	a=1; 
 	print("a = "+a);
 	b=(-2*x_centre); 
@@ -435,6 +436,8 @@ if (Manual_drop_select_status == true) {
 	
 			findContactAngle();
 			
+			setResult("slice_direction", nResults-1, "XZ");
+			updateResults();
 		};
 		
 		//////////////////////////////////////////////
@@ -461,7 +464,9 @@ if (Manual_drop_select_status == true) {
 			""+output_dir+"\\SurfacePx_YZ"+j+".csv");
 			
 			findContactAngle();
-	
+			
+			setResult("slice_direction", nResults-1, "YZ");
+			updateResults();
 		};
 		
 		//////////////////////////////////////////////
