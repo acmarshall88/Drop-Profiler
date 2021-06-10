@@ -139,6 +139,7 @@ function findPlateSurface() {
 	Voxel_unit = unit;
 	run("Plot Z-axis Profile");
 	Plot.getValues(z_micron, Imean);
+	run("Close");
 	Array.getStatistics(Imean, min, max, mean, stdDev);
 	maxLoc = Array.findMaxima(Imean, max/2);
 	
@@ -504,7 +505,12 @@ if (Manual_drop_select_status == true) {
 	
 	n = roiManager('count');
 	print("no. of drops to be analysed = "+n);
-	
+
+	if (n == 0) {
+		Dialog.create("No Droplets!");
+		Dialog.addMessage("No droplets meet specified criteria");
+		Dialog.show();
+	};
 	for (k = 0; k < n; k++) {
 	    selectImage(XYZ);
 	    roiManager('select', k);
@@ -513,58 +519,63 @@ if (Manual_drop_select_status == true) {
 	    run("Duplicate...", "duplicate");
 		XYZ_crop = getImageID();
 	
-			//re-find slice that best represents plate surface 
-			//(in case plate is not perfectly flat):
-			findPlateSurface();
-			
-			//remove all slices below this...
-			plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
-	//		plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
-			print("plate surface slice (for Droplet#"+(k+1)+") = "+plate_surface_slice_drop);
-			
-			selectImage(XYZ_crop);
-			run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
-			
-			run("In [+]");
-			run("In [+]");
-			
-			run("In [+]");
+		//re-find slice that best represents plate surface 
+		//(in case plate is not perfectly flat):
+		findPlateSurface();
 		
+		//remove all slices below this...
+		plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
+//		plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
+		print("plate surface slice (XY) for Droplet#"+(k+1)+" = "+plate_surface_slice_drop);
+		
+		selectImage(XYZ_crop);
+		run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+					
+		//Take side-on slices (XZ) of droplet (1 slice per pixel): 
 	    run("Reslice [/]...", "output="+Vx_width+" start=Top avoid");
-	
-			//Find slice with max average intensity (to estimate middle of droplet):
-			XYZ_crop_reslice = getImageID();
-			run("Plot Z-axis Profile");
-			Plot.getValues(z_micron, Imean);
-			Array.getStatistics(Imean, min, max, mean, stdDev);
-			maxLoc = Array.findMaxima(Imean, max/2);
-			
-			//find x (slice in micron) where y (Imean) = max
-			mid_slice_intensity = Imean[maxLoc[0]];
-			mid_slice_micron = z_micron[maxLoc[0]];
-			mid_slice_number = maxLoc[0]+1;
-			
-			print("number of slices = "+nSlices);		
-			print("highest intensity slice = "+mid_slice_number);
-			selectImage(XYZ_crop_reslice);
-			setSlice(mid_slice_number);
-	
-			// SET THRESHOLD TO DEFINE DROP SURFACE
-			setThreshold(master_threshold_lower, master_threshold_upper);
-			
-			run("Create Selection");
-			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv]");
-			
-			open(output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv");
-			IJ.renameResults("SurfacePx_XZ_raw_"+(k+1)+".csv","Results");
-			for (i = 0; i < nResults(); i++) {
-			    v = getResult("Y", i);
-			    setResult("Y_corrected", i, v*Vx_depth);
-			}
-			updateResults();
-			saveAs("Results", output_dir+"\\SurfacePx_XZ_raw_"+(k+1)+".csv");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");	
+		
+		//Find slice with max average intensity (to estimate middle of droplet):
+		XYZ_crop_reslice = getImageID();
+		run("Plot Z-axis Profile");
+		Plot.getValues(z_micron, Imean);
+		Array.getStatistics(Imean, min, max, mean, stdDev);
+		maxLoc = Array.findMaxima(Imean, max/2);
+		
+		//find x (slice in micron) where y (Imean) = max
+		mid_slice_intensity = Imean[maxLoc[0]];
+		mid_slice_micron = z_micron[maxLoc[0]];
+		mid_slice_number = maxLoc[0]+1;
+		
+		selectImage(XYZ_crop_reslice);
+		print("number of slices = "+nSlices);		
+		print("highest intensity slice = "+mid_slice_number);
+		setSlice(mid_slice_number);
 
-			
+		//Set Threshold and select to define surface of droplet:
+		setThreshold(master_threshold_lower, master_threshold_upper);
+		run("Create Selection");
+		run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ"+(k+1)+".csv]");
+
+		//Convert pixel coordinates to micron coordinates ("post-interpolation"):
+		open(output_dir+"\\SurfacePx_XZ"+(k+1)+".csv");
+		IJ.renameResults("SurfacePx_XZ"+(k+1)+".csv","Results");
+		for (i = 0; i < nResults(); i++) {
+		    Y = getResult("Y", i);
+		    setResult("Y_micron", i, Y*Vx_depth);
+		    X = getResult("X", i);
+		    setResult("X_micron", i, X*Vx_width);
+		}
+		updateResults();
+		saveAs("Results", output_dir+"\\SurfacePx_XZ"+(k+1)+".csv");
+		run("Close");
 	
 	}
 	
