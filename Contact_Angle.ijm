@@ -340,7 +340,9 @@ Dialog.show();
 XZrunstatus = Dialog.getCheckbox();
 YZrunstatus = Dialog.getCheckbox();
 
-
+////////////////////////////////////////////////////////////////////////////////////////////
+///// MANUAL DROPLET PICKING ///////
+////////////////////////////////////////////////////////////////////////////////////////////
 if (Manual_drop_select_status == true) {
 	
 	for (j = 1; j < 1000; j++) {
@@ -403,7 +405,6 @@ if (Manual_drop_select_status == true) {
 		run("Orthogonal Views");
 		
 		Stack.getOrthoViewsIDs(XY, YZ, XZ);
-		//setSlice(1);
 		selectImage(XYZ);
 		Stack.setSlice(1);
 		resetMinAndMax;
@@ -491,8 +492,15 @@ if (Manual_drop_select_status == true) {
 				exit
 		};
 	};
+
+
+
+	
 } else {
-		
+////////////////////////////////////////////////////////////////////////////////////////////
+///// AUTOMATED DROPLET PICKING ///////
+////////////////////////////////////////////////////////////////////////////////////////////
+
 	getVoxelSize(Vx_width, Vx_height, Vx_depth, Vx_unit);
 		Vx_width=Vx_width;
 		Vx_height=Vx_height;
@@ -536,8 +544,14 @@ if (Manual_drop_select_status == true) {
 		run("In [+]");
 		run("In [+]");
 		setSlice(1);
-
-/////////////////////////////////////////////////////////
+		resetMinAndMax;
+				
+		run("Duplicate...", "use");
+		run("RGB Color");
+		saveAs("tiff", output_dir+"\\"+(k+1)+"_XY_drop.tif");
+		close();
+		
+		selectImage(XYZ_crop);
 
 		if (XZrunstatus == true) {
 	
@@ -552,6 +566,7 @@ if (Manual_drop_select_status == true) {
 			XYZ_crop_XZreslice = getImageID();
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
+			run("Close");
 			Array.getStatistics(Imean, min, max, mean, stdDev);
 			maxLoc = Array.findMaxima(Imean, max/2);
 			
@@ -564,29 +579,43 @@ if (Manual_drop_select_status == true) {
 			print("number of XZ slices = "+nSlices);		
 			print("highest intensity slice = "+mid_slice_number);
 			setSlice(mid_slice_number);
-	
+			
+			run("Duplicate...", "use");
+			XZdrop = getImageID();
+			selectImage(XYZ_crop_XZreslice);
+			close();
+			selectImage(XZdrop);
+			
 			//Set Threshold and select to define surface of droplet:
+			selectImage(XZdrop);
 			setThreshold(master_threshold_lower, master_threshold_upper);
 			run("Create Selection");
-			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_XZ"+(k+1)+".csv]");
-	
+			run("Save XY Coordinates...", "save=["+output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv]");
+			
+			run("RGB Color");
+			setForegroundColor(255, 0, 0);
+			fill();
+			run("Select None");
+			saveAs("tiff", output_dir+"\\"+(k+1)+"_XZ_drop.tif");
+			
 			//Convert pixel coordinates to micron coordinates ("post-interpolation"):
-			open(output_dir+"\\SurfacePx_XZ"+(k+1)+".csv");
-			IJ.renameResults("SurfacePx_XZ"+(k+1)+".csv","Results");
+			open(output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
+			IJ.renameResults((k+1)+"_XZ_SurfacePx.csv","Results");
 			for (i = 0; i < nResults(); i++) {
-			    Y = getResult("Y", i);
-			    setResult("Y_micron", i, Y*Vx_depth);
 			    X = getResult("X", i);
 			    setResult("X_micron", i, X*Vx_width);
+			    Y = getResult("Y", i);
+			    setResult("Y_micron", i, Y*Vx_depth);
 			}
 			updateResults();
-			saveAs("Results", output_dir+"\\SurfacePx_XZ"+(k+1)+".csv");
+			saveAs("Results", output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
 			run("Close");
 		}
 
-/////////////////////////////////////////////////////////
+
 
 		if (YZrunstatus == true) {
+			
 			selectImage(XYZ_crop);
 			//Take side-on slices (YZ) of droplet (1 slice per pixel): 
 		    run("Reslice [/]...", "output="+Vx_width+" start=Left avoid");
@@ -599,6 +628,7 @@ if (Manual_drop_select_status == true) {
 			XYZ_crop_YZreslice = getImageID();
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
+			run("Close");
 			Array.getStatistics(Imean, min, max, mean, stdDev);
 			maxLoc = Array.findMaxima(Imean, max/2);
 			
@@ -611,29 +641,41 @@ if (Manual_drop_select_status == true) {
 			print("number of YZ slices = "+nSlices);		
 			print("highest intensity slice = "+mid_slice_number);
 			setSlice(mid_slice_number);
-	
+
+			run("Duplicate...", "use");
+			YZdrop = getImageID();
+			selectImage(XYZ_crop_YZreslice);
+			close();
+			selectImage(YZdrop);
+			
 			//Set Threshold and select to define surface of droplet:
 			setThreshold(master_threshold_lower, master_threshold_upper);
 			run("Create Selection");
-			run("Save XY Coordinates...", "save=["+output_dir+"\\SurfacePx_YZ"+(k+1)+".csv]");
-	
+			run("Save XY Coordinates...", "save=["+output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv]");
+
+			run("RGB Color");
+			setForegroundColor(255, 0, 0);
+			fill();
+			run("Select None");
+			saveAs("tiff", output_dir+"\\"+(k+1)+"_YZ_drop.tif");
+
 			//Convert pixel coordinates to micron coordinates ("post-interpolation"):
-			open(output_dir+"\\SurfacePx_YZ"+(k+1)+".csv");
-			IJ.renameResults("SurfacePx_YZ"+(k+1)+".csv","Results");
+			open(output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
+			IJ.renameResults((k+1)+"_YZ_SurfacePx.csv","Results");
 			for (i = 0; i < nResults(); i++) {
-			    Y = getResult("Y", i);
-			    setResult("Y_micron", i, Y*Vx_depth);
 			    X = getResult("X", i);
 			    setResult("X_micron", i, X*Vx_width);
+			    Y = getResult("Y", i);
+			    setResult("Y_micron", i, Y*Vx_depth);
 			}
 			updateResults();
-			saveAs("Results", output_dir+"\\SurfacePx_YZ"+(k+1)+".csv");
+			saveAs("Results", output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
 			run("Close");
 		}
 
 /////////////////////////////////////////////////////////
-
-
+	selectImage(XYZ);
+	close("\\Others");
 	
 	}
 	
