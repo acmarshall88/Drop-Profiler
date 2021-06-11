@@ -518,8 +518,19 @@ if (Manual_drop_select_status == true) {
 		Dialog.create("No Droplets!");
 		Dialog.addMessage("No droplets meet specified criteria");
 		Dialog.show();
-	
+	} else {
+		Dialog.create("Automated droplet analysis");
+		Dialog.addMessage(""+n+"droplets will be analysed.");
+		Dialog.addRadioButtonGroup("Continue?", newArray("Yes","No"), 1, 2, "Yes");
+		Dialog.show();
+
+		Auto_continue_status = Dialog.getRadioButton();
+		if (Auto_continue_status == "No") {
+			exit
+			}
 	};
+	
+	
 	for (k = 0; k < n; k++) {
 	    selectImage(XYZ);
 	    roiManager('select', k);
