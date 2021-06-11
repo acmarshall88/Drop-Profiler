@@ -286,14 +286,22 @@ if (nImages==0) {
 
 //set "user value" for thresholding
 Dialog.create("User input");
-Dialog.addNumber("(5) Droplet thresholding:  ", 15);
+Dialog.addNumber("Droplet thresholding:", 15);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10-15 for confocal images)");
 Dialog.addCheckbox("Select droplets manually?", false);
+Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
+Dialog.addNumber("Droplet size, min:", 1, 1, 5, "microns");
+Dialog.addNumber("Droplet size, max:", 100, 1, 5, "microns");
+Dialog.addSlider("Droplet *circularity*", 0, 1, 0.95);
+Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
 
 Dialog.show();
 
 user_value = Dialog.getNumber();
 Manual_drop_select_status = Dialog.getCheckbox();
+auto_min = Dialog.getNumber();
+auto_max = Dialog.getNumber();
+auto_circularity = Dialog.getNumber();
 
 //sample details...
 selectImage(1);
@@ -509,7 +517,7 @@ if (Manual_drop_select_status == true) {
 		
 	roiManager("reset");
 	
-	run("Analyze Particles...", "size=17-Infinity circularity=0.99-1.00 add slice");
+	run("Analyze Particles...", "size="+auto_min+"-"+auto_max+" circularity="+auto_circularity+"-1.00 add slice");
 	
 	n = roiManager('count');
 	print("no. of drops to be analysed = "+n);
@@ -520,7 +528,7 @@ if (Manual_drop_select_status == true) {
 		Dialog.show();
 	} else {
 		Dialog.create("Automated droplet analysis");
-		Dialog.addMessage(""+n+"droplets will be analysed.");
+		Dialog.addMessage(""+n+" droplets will be analysed.");
 		Dialog.addRadioButtonGroup("Continue?", newArray("Yes","No"), 1, 2, "Yes");
 		Dialog.show();
 
@@ -550,10 +558,10 @@ if (Manual_drop_select_status == true) {
 		
 		selectImage(XYZ_crop);
 		run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
-		run("In [+]");
-		run("In [+]");
-		run("In [+]");
-		run("In [+]");
+		for (z = 0; z < 8; z++) {
+			run("In [+]");
+		}
+		
 		setSlice(1);
 		resetMinAndMax;
 				
@@ -689,5 +697,10 @@ if (Manual_drop_select_status == true) {
 	close("\\Others");
 	
 	}
-	
+
+	Dialog.create("Done!");
+	Dialog.addMessage(""+n+" droplets have been analysed.");
+	Dialog.addMessage("Results can be found here:");
+	Dialog.addMessage(output_dir);
+	Dialog.show();
 }
