@@ -290,9 +290,9 @@ Dialog.addNumber("Droplet thresholding:", 15);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10-15 for confocal images)");
 Dialog.addCheckbox("Select droplets manually?", false);
 Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
-Dialog.addNumber("Droplet size, min:", 1, 1, 5, "microns");
-Dialog.addNumber("Droplet size, max:", 100, 1, 5, "microns");
-Dialog.addSlider("Droplet *circularity*", 0, 1, 0.95);
+Dialog.addNumber("Droplet XY size, min:", 1, 1, 5, "microns^2");
+Dialog.addNumber("Droplet XY size, max:", 100, 1, 5, "microns^2");
+Dialog.addSlider("Droplet *circularity*", 0, 1, 0.99);
 Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
 
 Dialog.show();
@@ -302,6 +302,9 @@ Manual_drop_select_status = Dialog.getCheckbox();
 auto_min = Dialog.getNumber();
 auto_max = Dialog.getNumber();
 auto_circularity = Dialog.getNumber();
+
+//add scalebar:
+run("Scale Bar...", "width=10 height=4 font=14 color=White background=None location=[Lower Right] bold overlay");
 
 //sample details...
 selectImage(1);
