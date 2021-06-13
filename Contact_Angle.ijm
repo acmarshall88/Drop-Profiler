@@ -604,8 +604,8 @@ if (Manual_drop_select_status == true) {
 			maxLoc = Array.findMaxima(Imean, max/2);
 			
 			//find x (slice in micron) where y (Imean) = max
-			mid_slice_intensity = Imean[maxLoc[0]];
-			mid_slice_micron = z_micron[maxLoc[0]];
+//			mid_slice_intensity = Imean[maxLoc[0]];
+//			mid_slice_micron = z_micron[maxLoc[0]];
 			mid_slice_number = maxLoc[0]+1;
 			
 			selectImage(XYZ_crop_XZreslice);
@@ -666,8 +666,8 @@ if (Manual_drop_select_status == true) {
 			maxLoc = Array.findMaxima(Imean, max/2);
 			
 			//find x (slice in micron) where y (Imean) = max
-			mid_slice_intensity = Imean[maxLoc[0]];
-			mid_slice_micron = z_micron[maxLoc[0]];
+//			mid_slice_intensity = Imean[maxLoc[0]];
+//			mid_slice_micron = z_micron[maxLoc[0]];
 			mid_slice_number = maxLoc[0]+1;
 			
 			selectImage(XYZ_crop_YZreslice);
