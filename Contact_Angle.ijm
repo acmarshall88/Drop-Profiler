@@ -292,7 +292,7 @@ Dialog.addCheckbox("Select droplets manually?", false);
 Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
 Dialog.addNumber("Droplet XY size, min:", 4, 1, 5, "microns^2");
 Dialog.addNumber("Droplet XY size, max:", 100, 1, 5, "microns^2");
-Dialog.addSlider("Droplet *circularity*", 0, 1, 1.00);
+Dialog.addSlider("Droplet *circularity*", 0, 1, 0.99);
 Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
 
 Dialog.show();
@@ -600,13 +600,10 @@ if (Manual_drop_select_status == true) {
 			XYZ_crop_XZreslice = getImageID();
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
-			run("Close");
 			Array.getStatistics(Imean, min, max, mean, stdDev);
-			maxLoc = Array.findMaxima(Imean, max/2);
+			maxLoc = Array.findMaxima(Imean, max/20, 1);
 			
-			//find x (slice in micron) where y (Imean) = max
-//			mid_slice_intensity = Imean[maxLoc[0]];
-//			mid_slice_micron = z_micron[maxLoc[0]];
+			//find x (XZ slice) where y (Imean) = max
 			mid_slice_number = maxLoc[0]+1;
 			
 			selectImage(XYZ_crop_XZreslice);
@@ -662,13 +659,10 @@ if (Manual_drop_select_status == true) {
 			XYZ_crop_YZreslice = getImageID();
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
-//			run("Close");
 			Array.getStatistics(Imean, min, max, mean, stdDev);
 			maxLoc = Array.findMaxima(Imean, max/20, 1);
 			Array.print(maxLoc);
-			//find x (slice in micron) where y (Imean) = max
-//			mid_slice_intensity = Imean[maxLoc[0]];
-//			mid_slice_micron = z_micron[maxLoc[0]];
+			//find x (YZ slice) where y (Imean) = max
 			mid_slice_number = maxLoc[0]+1;
 			
 			selectImage(XYZ_crop_YZreslice);
@@ -708,8 +702,11 @@ if (Manual_drop_select_status == true) {
 		}
 
 /////////////////////////////////////////////////////////
-	selectImage(XYZ);
-	close("\\Others");
+		//	Close windows ONLY after ever 10 droplets...
+		if (k/10 == round(k/10) && k > 0) {
+		selectImage(XYZ);
+		close("\\Others");
+		}
 	}
 
 /////////////////////////////////////////////////////////
