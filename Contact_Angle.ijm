@@ -520,7 +520,7 @@ if (Manual_drop_select_status == true) {
 		
 	roiManager("reset");
 	
-	run("Analyze Particles...", "size="+auto_min+"-"+auto_max+" circularity="+auto_circularity+"-1.00 add slice");
+	run("Analyze Particles...", "size="+auto_min+"-"+auto_max+" circularity="+auto_circularity+"-1.00 exclude add slice");
 	
 	n = roiManager('count');
 	print("no. of drops to be analysed = "+n);
