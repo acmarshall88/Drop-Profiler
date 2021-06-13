@@ -543,7 +543,18 @@ if (Manual_drop_select_status == true) {
 	
 	
 	for (k = 0; k < n; k++) {
-	    selectImage(XYZ);
+		
+	    if (isOpen(XYZ)==true) {	
+			selectImage(XYZ);
+		} else {
+			open(dir+Zstackfilename);
+			run("In [+]");
+			run("Scale to Fit");
+			XYZ = getImageID();
+			setSlice(plate_surface_slice_average);
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		}
+		
 	    roiManager('select', k);
 	    Roi.getBounds(x, y, width, height);
 	    makeRectangle(x-2, y-2, width+4, height+4);
@@ -698,9 +709,9 @@ if (Manual_drop_select_status == true) {
 /////////////////////////////////////////////////////////
 	selectImage(XYZ);
 	close("\\Others");
-	
 	}
 
+/////////////////////////////////////////////////////////
 	Dialog.create("Done!");
 	Dialog.addMessage(""+n+" droplets have been analysed.");
 	Dialog.addMessage("Results can be found here:");
