@@ -290,9 +290,9 @@ Dialog.addNumber("Droplet thresholding:", 15);
 Dialog.addMessage("^ Number of positive standard deviations from mean of background peak of \n blank-subtracted image ('user value' - Wang et al, 'A Molecular Grammar...', Cell, 2018).\n Increasing this will increase the lower intensity threshold for defining pixels as condensed phase. \n (use ~10-15 for confocal images)");
 Dialog.addCheckbox("Select droplets manually?", false);
 Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
-Dialog.addNumber("Droplet XY size, min:", 1, 1, 5, "microns^2");
+Dialog.addNumber("Droplet XY size, min:", 4, 1, 5, "microns^2");
 Dialog.addNumber("Droplet XY size, max:", 100, 1, 5, "microns^2");
-Dialog.addSlider("Droplet *circularity*", 0, 1, 0.99);
+Dialog.addSlider("Droplet *circularity*", 0, 1, 1.00);
 Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
 
 Dialog.show();
@@ -559,8 +559,9 @@ if (Manual_drop_select_status == true) {
 	    Roi.getBounds(x, y, width, height);
 	    makeRectangle(x-2, y-2, width+4, height+4);
 	    run("Duplicate...", "duplicate");
-		XYZ_crop = getImageID();
-	
+//		XYZ_crop = getImageID();
+		XYZ_crop = getTitle();
+			
 		//re-find slice that best represents plate surface 
 		//(in case plate is not perfectly flat):
 		findPlateSurface();
@@ -661,10 +662,10 @@ if (Manual_drop_select_status == true) {
 			XYZ_crop_YZreslice = getImageID();
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
-			run("Close");
+//			run("Close");
 			Array.getStatistics(Imean, min, max, mean, stdDev);
-			maxLoc = Array.findMaxima(Imean, max/2);
-			
+			maxLoc = Array.findMaxima(Imean, max/20, 1);
+			Array.print(maxLoc);
 			//find x (slice in micron) where y (Imean) = max
 //			mid_slice_intensity = Imean[maxLoc[0]];
 //			mid_slice_micron = z_micron[maxLoc[0]];
