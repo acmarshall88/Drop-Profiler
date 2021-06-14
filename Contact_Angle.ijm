@@ -545,20 +545,22 @@ if (Manual_drop_select_status == true) {
 	
 	for (k = 0; k < n; k++) {
 		
-	    if (isOpen(XYZ)==true) {	
-			selectImage(XYZ);
-		} else {
+	    if (isOpen(XYZ)==false) {
 			open(dir+Zstackfilename);
 			run("In [+]");
 			run("Scale to Fit");
-			XYZ = getImageID();
+//			XYZ = getImageID();
+			XYZ = getTitle();
 			setSlice(plate_surface_slice_average);
 			setThreshold(master_threshold_lower, master_threshold_upper);
 		}
 		
-	    roiManager('select', k);
+		selectImage(XYZ);
+	    roiManager("select", k);
+	    selectImage(XYZ);
 	    Roi.getBounds(x, y, width, height);
 	    makeRectangle(x-2, y-2, width+4, height+4);
+	    selectImage(XYZ);
 	    run("Duplicate...", "duplicate");
 //		XYZ_crop = getImageID();
 		XYZ_crop = getTitle();
@@ -649,6 +651,11 @@ if (Manual_drop_select_status == true) {
 		if (YZrunstatus == true) {
 			
 			selectImage(XYZ_crop);
+			//Check correct window selected...
+			if (nSlices == 1) {
+				selectImage(XYZ_crop);
+			}
+			
 			//Take side-on slices (YZ) of droplet (1 slice per pixel): 
 		    run("Reslice [/]...", "output="+Vx_width+" start=Left avoid");
 			run("In [+]");
