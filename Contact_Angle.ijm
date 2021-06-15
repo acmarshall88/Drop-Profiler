@@ -541,6 +541,9 @@ if (Manual_drop_select_status == true) {
 			exit
 			}
 	};
+
+
+setBatchMode(true);
 	
 	
 	for (k = 0; k < n; k++) {
@@ -575,6 +578,11 @@ if (Manual_drop_select_status == true) {
 		print("plate surface slice (XY) for Droplet#"+(k+1)+" = "+plate_surface_slice_drop);
 		
 		selectImage(XYZ_crop);
+		//Check correct window selected...
+			if (nSlices == 1) {
+				selectImage(XYZ_crop);
+			}
+			
 		run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
 		for (z = 0; z < 8; z++) {
 			run("In [+]");
@@ -591,7 +599,11 @@ if (Manual_drop_select_status == true) {
 		selectImage(XYZ_crop);
 
 		if (XZrunstatus == true) {
-	
+			//Check correct window selected...
+			if (nSlices == 1) {
+				selectImage(XYZ_crop);
+			}
+			
 			//Take side-on slices (XZ) of droplet (1 slice per pixel): 
 		    run("Reslice [/]...", "output="+Vx_width+" start=Top avoid");
 			run("In [+]");
@@ -718,6 +730,9 @@ if (Manual_drop_select_status == true) {
 	}
 
 /////////////////////////////////////////////////////////
+
+setBatchMode(false);
+
 	Dialog.create("Done!");
 	Dialog.addMessage(""+n+" droplets have been analysed.");
 	Dialog.addMessage("Results can be found here:");
