@@ -543,7 +543,7 @@ if (Manual_drop_select_status == true) {
 	};
 
 
-setBatchMode(true);
+//setBatchMode(true);
 	
 	
 	for (k = 0; k < n; k++) {
@@ -731,7 +731,7 @@ setBatchMode(true);
 
 /////////////////////////////////////////////////////////
 
-setBatchMode(false);
+//setBatchMode(false);
 
 	Dialog.create("Done!");
 	Dialog.addMessage(""+n+" droplets have been analysed.");
