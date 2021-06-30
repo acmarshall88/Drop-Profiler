@@ -335,7 +335,8 @@ setCustomThreshold();
 //(after extracting side-on profiles)  
 getThreshold(lower, upper);
 master_threshold_lower = lower;
-master_threshold_upper = lower*1.8;
+//master_threshold_upper = lower*1.8;
+master_threshold_upper = lower*1.2;
 
 print("Master threshold values (lower/upper):");
 print(master_threshold_lower);
