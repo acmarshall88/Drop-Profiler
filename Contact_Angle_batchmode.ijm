@@ -349,7 +349,7 @@ setCustomThreshold();
 getThreshold(lower, upper);
 master_threshold_lower = lower;
 //master_threshold_upper = lower*1.8;
-master_threshold_upper = lower*1.1;
+master_threshold_upper = lower*1.2;
 
 print("Master threshold values (lower/upper):");
 print(master_threshold_lower);
@@ -555,6 +555,15 @@ setBatchMode(true);
 /////////////////////////////////////////////////////////
 
 //setBatchMode(false);
+
+
+print("SUMMARY:");
+print("Voxel:\n width = "+Vx_width+"\n height = "+Vx_height+"\n depth = "+Vx_depth+"\n units = "+Vx_unit);
+print("Number of droplets analysed = "+n);
+print("Slice direction(s) (side-on droplet profile(s)):");
+	if (XZrunstatus==true) {print("XZ");};
+	if (YZrunstatus==true) {print("YZ");};
+print("Output Directory: "+output_dir);
 
 	Dialog.create("Done!");
 	Dialog.addMessage(""+n+" droplets have been analysed.");
