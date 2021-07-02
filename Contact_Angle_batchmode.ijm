@@ -556,13 +556,13 @@ setBatchMode(true);
 
 //setBatchMode(false);
 
-
+print("\n##################################################################");
 print("SUMMARY:");
-print("Voxel:\n width = "+Vx_width+"\n height = "+Vx_height+"\n depth = "+Vx_depth+"\n units = "+Vx_unit);
+print("Voxel:\n  width = "+Vx_width+"\n  height = "+Vx_height+"\n  depth = "+Vx_depth+"\n  units = "+Vx_unit);
 print("Number of droplets analysed = "+n);
 print("Slice direction(s) (side-on droplet profile(s)):");
-	if (XZrunstatus==true) {print("XZ");};
-	if (YZrunstatus==true) {print("YZ");};
+	if (XZrunstatus==true) {print("  XZ");};
+	if (YZrunstatus==true) {print("  YZ");};
 print("Output Directory: "+output_dir);
 
 	Dialog.create("Done!");
