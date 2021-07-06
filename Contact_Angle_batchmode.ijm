@@ -530,6 +530,14 @@ if (Manual_drop_select_status == true) {
 		continue_status = Dialog.getRadioButton();
 		print(continue_status);
 		if (continue_status == "No") {
+			print("\n##################################################################");
+			print("SUMMARY:");
+			print("Number of droplets analysed = "+j);
+			print("Slice direction(s) (side-on droplet profile(s)):");
+			if (XZrunstatus==true) {print("  XZ");};
+			if (YZrunstatus==true) {print("  YZ");};
+			print("Output Directory: "+output_dir);
+
 			selectWindow("Log");
 			saveAs("text", output_dir+"\\log.txt");
 			close("Log");
@@ -551,7 +559,19 @@ if (Manual_drop_select_status == true) {
 		Vx_height=Vx_height;
 		Vx_depth=Vx_depth;
 		Vx_unit=Vx_unit;
-		
+
+	// write voxel_dimensions.csv to file:
+	row = nResults;
+	setResult("Vx_width", row, Vx_width);
+	setResult("Vx_height", row, Vx_height);
+	setResult("Vx_depth", row, Vx_depth);
+	setResult("Vx_unit", row, Vx_unit);
+	updateResults();
+	selectWindow("Results");
+	saveAs("results", output_dir+"\\voxel_dimensions.csv");
+	run("Clear Results");
+	run("Close");
+	
 	roiManager("reset");
 	
 	run("Analyze Particles...", "size="+auto_min+"-"+auto_max+" circularity="+auto_circularity+"-1.00 exclude add slice");
