@@ -367,8 +367,179 @@ Dialog.show();
 XZrunstatus = Dialog.getCheckbox();
 YZrunstatus = Dialog.getCheckbox();
 
-////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////
+///// MANUAL DROPLET PICKING ///////
+////////////////////////////////////////////////////////////////////////////////////////////
+if (Manual_drop_select_status == true) {
+		
+	for (j = 1; j < 1000; j++) {
+		
+		if (j > 1 && nImages > 0) {
+			selectImage(XYZ);
+			close();
+			print("good to 4");
+			selectImage("XZ"+(j-1)+"_dropsurface.tif");
+			print("good to 5");
+			close();
+			print("good to 6");
+			selectImage("YZ"+(j-1)+"_dropsurface.tif");
+			close();
+			print("sdf");
+		}
+		
+		print("\n##################################################################");
+		print("### DROPLET #"+j+"... ");
+		
+		//re-open Zstack upon iteration
+		if (nImages==0) {
+			open(dir+Zstackfilename);
+			run("In [+]");
+			run("Scale to Fit");
+			XYZ = getImageID();
+			setSlice(plate_surface_slice_average);
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		};
+		
+		//set slice to average plate surface:
+		selectImage(XYZ);
+		setSlice(plate_surface_slice_average);
+		//run("Plot Z-axis Profile");
+		//Plot.getValues(z_micron, Imean);
+		//run("Close");
+		//Array.getStatistics(Imean, min, max, mean, stdDev);
+		//maxLoc = Array.findMaxima(Imean, max/2);
+		//max_intensity_slice = maxLoc[0]+1;
+		//setSlice(max_intensity_slice);
+		
+		////////////////
+		// USER INPUT:
+		waitForUser("draw selection box around a single droplet");
+		
+		getSelectionBounds(x, y, width, height);
+		print("Droplet#"+j+" location and size (user-defined selection box):");
+		print(" location (top left coords) = ("+x+", "+y+") pxls");
+		print(" size (W x H) = "+width+" x "+height+" pxls"); 
+		
+		run("Crop");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+		run("In [+]");
+		run("Scale to Fit");
+		
+		//re-find slice that best represents plate surface 
+		//(in case plate is not perfectly flat):
+		findPlateSurface();
+		
+		//remove all slices below this...
+		//plate_surface_slice_drop = getSliceNumber() - 1; //(EXCLUSIVE)
+		plate_surface_slice_drop = getSliceNumber();; //(INCLUSIVE)
+		print("plate surface slice (for Droplet#"+j+") = "+plate_surface_slice_drop);
+		
+		selectImage(XYZ);
+		run("Slice Remover", "first=1 last="+plate_surface_slice_drop+" increment=1");
+		
+		run("In [+]");
+		run("In [+]");
+		
+		run("In [+]");
+		
+		run("Orthogonal Views");
+		
+		Stack.getOrthoViewsIDs(XY, YZ, XZ);
+		selectImage(XYZ);
+		Stack.setSlice(1);
+		resetMinAndMax;
+		
+		// USER INPUT:
+		waitForUser("click on centre of droplet");
+		
+		
+	print("Threshold for defining droplet surface: \n "+
+			"  Lower = "+master_threshold_lower+" \n "+
+			"  Upper = "+master_threshold_upper);
+			
+		//////////////////////////////////////////////
+		
+		if (XZrunstatus == true) {
+		
+			selectImage(XZ);
+			saveAs("Tiff", output_dir+"\\XZ"+j+".tif");
+			open(output_dir+"\\XZ"+j+".tif");
+			for (i = 0; i < 6; i++) {
+				run("In [+]");
+			};
+			run("Scale to Fit");
+	
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		
+		
+			run("Create Selection");
+			run("Save XY Coordinates...", "save=["+output_dir+"\\"+j+"_XZ_SurfacePx.csv]");
+		
+			saveAs("Tiff", output_dir+"\\"+"XZ"+j+"_dropsurface.tif");
+		
+			print(" \n**Output file containing XZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
+			""+output_dir+"\\SurfacePx_XZ"+j+".csv");
+	
+			findContactAngle();
+			
+			setResult("slice_direction", nResults-1, "XZ");
+			updateResults();
+		};
+		
+		//////////////////////////////////////////////
+		
+		if (YZrunstatus == true) {
+			
+			selectImage(YZ);
+			run("Rotate 90 Degrees Right");
+			saveAs("Tiff", output_dir+"\\YZ"+j+".tif");
+			open(output_dir+"\\YZ"+j+".tif");
+			for (i = 0; i < 6; i++) {
+				run("In [+]");
+			};
+			run("Scale to Fit");
+	
+			setThreshold(master_threshold_lower, master_threshold_upper);
+		
+			run("Create Selection");
+			run("Save XY Coordinates...", "save=["+output_dir+"\\"+j+"_YZ_SurfacePx.csv]");
+		
+			saveAs("Tiff", output_dir+"\\"+"YZ"+j+"_dropsurface.tif");
+		
+			print(" \n**Output file containing YZ coordinates \n  of Droplet#"+j+" Surface can be found here: \n "+
+			""+output_dir+"\\SurfacePx_YZ"+j+".csv");
+			
+			findContactAngle();
+			
+			setResult("slice_direction", nResults-1, "YZ");
+			updateResults();
+		};
+		
+		//////////////////////////////////////////////
+		
+		waitForUser("Inspect images");
+		
+		Dialog.create("Keep analysing?");
+		Dialog.addRadioButtonGroup("Would you like to analyse another droplet from this Z-stack?", newArray("Yes","No"), 2, 1, "Yes");
+		Dialog.addMessage("*If 'Yes', please WAIT for Z-stack to re-open automatically before clicking anywhere!");
+		Dialog.show();
+		
+		continue_status = Dialog.getRadioButton();
+		print(continue_status);
+		if (continue_status == "No") {
+			selectWindow("Log");
+			saveAs("text", output_dir+"\\log.txt");
+			close("Log");
+				exit
+		};
+
+	};
+
+	
+} else {
 ////////////////////////////////////////////////////////////////////////////////////////////
 ///// AUTOMATED DROPLET PICKING ///////
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -554,8 +725,6 @@ setBatchMode(true);
 
 /////////////////////////////////////////////////////////
 
-//setBatchMode(false);
-
 print("\n##################################################################");
 print("SUMMARY:");
 print("Voxel:\n  width = "+Vx_width+"\n  height = "+Vx_height+"\n  depth = "+Vx_depth+"\n  units = "+Vx_unit);
@@ -564,6 +733,11 @@ print("Slice direction(s) (side-on droplet profile(s)):");
 	if (XZrunstatus==true) {print("  XZ");};
 	if (YZrunstatus==true) {print("  YZ");};
 print("Output Directory: "+output_dir);
+
+// Save Log to output directory:
+setBatchMode(false);
+selectWindow("Log");
+saveAs("text", output_dir+"\\log");
 
 	Dialog.create("Done!");
 	Dialog.addMessage(""+n+" droplets have been analysed.");
