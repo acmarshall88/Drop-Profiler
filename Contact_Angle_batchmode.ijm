@@ -533,7 +533,9 @@ if (Manual_drop_select_status == true) {
 			selectWindow("Log");
 			saveAs("text", output_dir+"\\log.txt");
 			close("Log");
-				exit
+			selectWindow("Results");
+			saveAs("results", output_dir+"\\results.csv");
+			exit
 		};
 
 	};
