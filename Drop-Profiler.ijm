@@ -296,10 +296,13 @@ Dialog.addCheckbox("Run median filter?", true);
 Dialog.addNumber("Median filter radius:", 2, 1, 5, "pixels");
 Dialog.addCheckbox("Select droplets manually?", false);
 Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
+Dialog.addMessage("--v--(auto droplet picking)--v--");
 Dialog.addNumber("Droplet XY size, min:", 4, 1, 5, "microns^2");
 Dialog.addNumber("Droplet XY size, max:", 100, 1, 5, "microns^2");
 Dialog.addSlider("Droplet *circularity*", 0, 1, 0.99);
 Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
+Dialog.addCheckbox("Interpolate data?", false);
+Dialog.addMessage("--^--(auto droplet picking)--^--");
 
 Dialog.show();
 
@@ -310,6 +313,7 @@ Manual_drop_select_status = Dialog.getCheckbox();
 auto_min = Dialog.getNumber();
 auto_max = Dialog.getNumber();
 auto_circularity = Dialog.getNumber();
+auto_interpolate_status = Dialog.getCheckbox();
 
 //run median filter:
 if (filter_status==true) {
@@ -667,21 +671,23 @@ setBatchMode(true);
 			fill();
 			run("Select None");
 			saveAs("tiff", output_dir+"\\"+(k+1)+"_XZ_drop.tif");
-			
-			//Convert pixel coordinates to micron coordinates ("post-interpolation"):
-			open(output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
-			IJ.renameResults((k+1)+"_XZ_SurfacePx.csv","Results");
-			for (i = 0; i < nResults(); i++) {
-			    X = getResult("X", i);
-			    setResult("X_micron", i, X*Vx_width);
-			    Y = getResult("Y", i);
-			    setResult("Y_micron", i, Y*Vx_depth);
-			}
-			updateResults();
-			saveAs("Results", output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
-			run("Close");
-		}
 
+			if (auto_interpolate_status == true) {
+					
+				//Convert pixel coordinates to micron coordinates ("post-interpolation"):
+				open(output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
+				IJ.renameResults((k+1)+"_XZ_SurfacePx.csv","Results");
+				for (i = 0; i < nResults(); i++) {
+				    X = getResult("X", i);
+				    setResult("X_micron", i, X*Vx_width);
+				    Y = getResult("Y", i);
+				    setResult("Y_micron", i, Y*Vx_depth);
+				}
+				updateResults();
+				saveAs("Results", output_dir+"\\"+(k+1)+"_XZ_SurfacePx.csv");
+				run("Close");
+			}
+		}
 
 
 		if (YZrunstatus == true) {
@@ -727,21 +733,23 @@ setBatchMode(true);
 			run("Select None");
 			saveAs("tiff", output_dir+"\\"+(k+1)+"_YZ_drop.tif");
 
-			//Convert pixel coordinates to micron coordinates ("post-interpolation"):
-			open(output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
-			IJ.renameResults((k+1)+"_YZ_SurfacePx.csv","Results");
-			for (i = 0; i < nResults(); i++) {
-			    X = getResult("X", i);
-			    setResult("X_micron", i, X*Vx_width);
-			    Y = getResult("Y", i);
-			    setResult("Y_micron", i, Y*Vx_depth);
+
+			if (auto_interpolate_status == true) {
+	
+				//Convert pixel coordinates to micron coordinates ("post-interpolation"):
+				open(output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
+				IJ.renameResults((k+1)+"_YZ_SurfacePx.csv","Results");
+				for (i = 0; i < nResults(); i++) {
+				    X = getResult("X", i);
+				    setResult("X_micron", i, X*Vx_width);
+				    Y = getResult("Y", i);
+				    setResult("Y_micron", i, Y*Vx_depth);
+				}
+				updateResults();
+				saveAs("Results", output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
+				run("Close");
 			}
-			updateResults();
-			saveAs("Results", output_dir+"\\"+(k+1)+"_YZ_SurfacePx.csv");
-			run("Close");
 		}
-
-
 	}
 
 
