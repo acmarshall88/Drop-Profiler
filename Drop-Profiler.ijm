@@ -141,7 +141,7 @@ function findPlateSurface() {
 	Plot.getValues(z_micron, Imean);
 	run("Close");
 	Array.getStatistics(Imean, min, max, mean, stdDev);
-	maxLoc = Array.findMaxima(Imean, max/2);
+	maxLoc = Array.findMaxima(Imean, max/3);
 	
 	//find x (slice in micron) where y (Imean) = max
 	z_base_intensity = Imean[maxLoc[0]];
@@ -297,8 +297,8 @@ Dialog.addNumber("Median filter radius:", 2, 1, 5, "pixels");
 Dialog.addCheckbox("Select droplets manually?", false);
 Dialog.addMessage("^ If unchecked, droplets will be selected for analysis automatically using the parameters below...");
 Dialog.addMessage("--v--(auto droplet picking)--v--");
-Dialog.addNumber("Droplet XY size, min:", 4, 1, 5, "microns^2");
-Dialog.addNumber("Droplet XY size, max:", 100, 1, 5, "microns^2");
+Dialog.addNumber("Droplet XY size, min:", 0, 1, 5, "microns^2");
+Dialog.addNumber("Droplet XY size, max:", 1000, 1, 5, "microns^2");
 Dialog.addSlider("Droplet *circularity*", 0, 1, 0.99);
 Dialog.addMessage("(* Specifies how circular (in XY plane) a droplet must be to be included (1 = perfect circle).");
 Dialog.addCheckbox("Interpolate data?", false);
@@ -706,7 +706,7 @@ setBatchMode(true);
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
 			Array.getStatistics(Imean, min, max, mean, stdDev);
-			maxLoc = Array.findMaxima(Imean, max/20, 1);
+			maxLoc = Array.findMaxima(Imean, max/100, 1);
 
 			//find x (YZ slice) where y (Imean) = max
 			mid_slice_number = maxLoc[0]+1;
