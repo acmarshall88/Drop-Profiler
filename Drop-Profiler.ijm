@@ -347,6 +347,7 @@ print("Output Directory = " + output_dir);
 		Vx_unit=Vx_unit;
 
 	// write voxel_dimensions.csv to file:
+	run("Clear Results");
 	setResult("Vx_width", 0, Vx_width);
 	setResult("Vx_height", 0, Vx_height);
 	setResult("Vx_depth", 0, Vx_depth);
