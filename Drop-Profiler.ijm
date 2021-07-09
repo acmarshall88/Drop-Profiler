@@ -340,9 +340,29 @@ File.makeDirectory(output_dir);
 print("Output Directory = " + output_dir);
 
 
+	getVoxelSize(Vx_width, Vx_height, Vx_depth, Vx_unit);
+		Vx_width=Vx_width;
+		Vx_height=Vx_height;
+		Vx_depth=Vx_depth;
+		Vx_unit=Vx_unit;
+
+	// write voxel_dimensions.csv to file:
+	setResult("Vx_width", 0, Vx_width);
+	setResult("Vx_height", 0, Vx_height);
+	setResult("Vx_depth", 0, Vx_depth);
+	setResult("Vx_unit", 0, Vx_unit);
+	updateResults();
+	selectWindow("Results");
+	saveAs("results", output_dir+"\\voxel_dimensions.csv");
+	run("Clear Results");
+	run("Close");
+	
+
+
 print("\n##################################################################");
 print("### Set master threshold using slice that corresponds \n### best to average plate surface... ");
 
+selectImage(XYZ);
 findPlateSurface();
 plate_surface_slice_average = getSliceNumber();
 
@@ -558,24 +578,6 @@ if (Manual_drop_select_status == true) {
 ///// AUTOMATED DROPLET PICKING ///////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-	getVoxelSize(Vx_width, Vx_height, Vx_depth, Vx_unit);
-		Vx_width=Vx_width;
-		Vx_height=Vx_height;
-		Vx_depth=Vx_depth;
-		Vx_unit=Vx_unit;
-
-	// write voxel_dimensions.csv to file:
-	row = nResults;
-	setResult("Vx_width", row, Vx_width);
-	setResult("Vx_height", row, Vx_height);
-	setResult("Vx_depth", row, Vx_depth);
-	setResult("Vx_unit", row, Vx_unit);
-	updateResults();
-	selectWindow("Results");
-	saveAs("results", output_dir+"\\voxel_dimensions.csv");
-	run("Clear Results");
-	run("Close");
-	
 	roiManager("reset");
 	
 	run("Analyze Particles...", "size="+auto_min+"-"+auto_max+" circularity="+auto_circularity+"-1.00 exclude add slice");
