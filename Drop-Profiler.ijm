@@ -646,7 +646,7 @@ setBatchMode(true);
 			run("Plot Z-axis Profile");
 			Plot.getValues(z_micron, Imean);
 			Array.getStatistics(Imean, min, max, mean, stdDev);
-			maxLoc = Array.findMaxima(Imean, max/20, 1);
+			maxLoc = Array.findMaxima(Imean, max/1000, 1);
 			
 			//find x (XZ slice) where y (Imean) = max
 			mid_slice_number = maxLoc[0]+1;
